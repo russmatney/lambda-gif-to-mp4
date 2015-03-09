@@ -5,6 +5,8 @@ var gm = require('gm')
             .subClass({ imageMagick: true }); // Enable ImageMagick integration.
 var util = require('util');
 
+var ffmpegCommand = require('fluent-ffmpeg');
+
 // constants
 var MAX_WIDTH  = 100;
 var MAX_HEIGHT = 100;
@@ -13,6 +15,11 @@ var MAX_HEIGHT = 100;
 var s3 = new AWS.S3();
 
 exports.handler = function(event, context) {
+
+  var command = ffmpegCommand();
+  console.log(command);
+
+
   // Read options from the event.
   console.log("Reading options from event:\n", util.inspect(event, {depth: 5}));
   var srcBucket = event.Records[0].s3.bucket.name;
