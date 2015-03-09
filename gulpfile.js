@@ -5,24 +5,22 @@ var install = require('gulp-install');
 var runSequence = require('run-sequence');
 
 gulp.task('clean', function(cb) {
-  del('./dist',
-    del('./dist.zip', cb)
-  );
+  del(['./dist', './dist.zip'], cb);
 });
 
 gulp.task('js', function() {
-  gulp.src('index.js')
+  return gulp.src('index.js')
     .pipe(gulp.dest('dist/'));
 });
 
 gulp.task('package-npm-mods', function() {
-  gulp.src('./package.json')
-    .pipe(gulp.dest('./dist/'))
+  return gulp.src('./package.json')
+    .pipe(gulp.dest('dist/'))
     .pipe(install({production: true}));
 });
 
 gulp.task('zip-it-up', function() {
-  gulp.src(['dist/**/*', '!dist/package.json'])
+  return gulp.src(['dist/**/*', '!dist/package.json'])
     .pipe(zip('dist.zip'))
     .pipe(gulp.dest('./'));
 });
