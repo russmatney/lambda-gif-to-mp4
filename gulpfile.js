@@ -38,12 +38,18 @@ gulp.task('zip', function(callback) {
   );
 });
 
+var config = {
+  region: 'us-east-1',
+  functionName: 'resizeImage',
+  timeout: 10
+}
+
 gulp.task('upload', function() {
 
   //TODO: pull from gulp-env
-  AWS.config.region = 'us-east-1';
+  AWS.config.region = config.region;
+  var functionName = config.functionName;
   var lambda = new AWS.Lambda();
-  var functionName = 'resizeImage';
 
   lambda.getFunction({FunctionName: functionName}, function(err, data) {
     if (err) {
@@ -59,13 +65,13 @@ gulp.task('upload', function() {
     }
 
     var current = data.Configuration;
-    //TODO: pull from config/gulp-env
     var params = {
       FunctionName: functionName,
       Handler: current.Handler,
       Mode: current.Mode,
       Role: current.Role,
-      Runtime: current.Runtime
+      Runtime: current.Runtime,
+      Timeout: config.timeout
     };
 
     fs.readFile('./dist.zip', function(err, data) {
