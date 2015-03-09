@@ -9,7 +9,10 @@
   "author": "Russell Matney <russell.matney@gmail.com>",
   "license": "ISC",
   "devDependencies": {
+    "del": "^1.1.1",
     "gulp": "^3.8.11",
-    "gulp-zip": "^2.0.3"
+    "gulp-install": "^0.2.0",
+    "gulp-zip": "^2.0.3",
+    "run-sequence": "^1.0.2"
   }
 }
