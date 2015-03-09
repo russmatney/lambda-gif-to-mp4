@@ -7,6 +7,17 @@ var util = require('util');
 
 process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
 
+require('child_process').exec(
+  'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg',
+  function (error, stdout, stderr) {
+    console.log('stdout: ' + stdout);
+    console.log('stderr: ' + stderr);
+    if (error !== null) {
+      console.log('exec error: ' + error);
+    }
+  }
+);
+
 var ffmpeg = require('fluent-ffmpeg');
 
 // constants
@@ -23,19 +34,6 @@ exports.handler = function(event, context) {
 
   process.env['FFMPEG_PATH'] = '/tmp/ffmpeg'
   process.env['FFPROBE_PATH'] = '/tmp/ffprobe'
-
-  var exec = require('child_process').exec,
-    child;
-
-  child = exec('cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg',
-    function (error, stdout, stderr) {
-      console.log('stdout: ' + stdout);
-      console.log('stderr: ' + stderr);
-      if (error !== null) {
-        console.log('exec error: ' + error);
-      }
-    }
-  );
 
   ffmpeg.getAvailableFormats(function(err, formats) {
     console.log('error getting formats');
