@@ -17,6 +17,7 @@ var s3 = new AWS.S3();
 exports.handler = function(event, context) {
 
   var command = ffmpegCommand();
+  console.log('ffmpeg command:');
   console.log(command);
 
 
