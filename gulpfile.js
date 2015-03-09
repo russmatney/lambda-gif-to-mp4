@@ -16,6 +16,11 @@ gulp.task('js', function() {
     .pipe(gulp.dest('dist/'));
 });
 
+gulp.task('copy-binaries', function() {
+  return gulp.src('./bin/*')
+    .pipe(gulp.dest('dist/'));
+});
+
 gulp.task('package-npm-mods', function() {
   return gulp.src('./package.json')
     .pipe(gulp.dest('dist/'))
@@ -32,11 +37,22 @@ gulp.task('zip-it-up', function() {
 gulp.task('zip', function(callback) {
   return runSequence(
     ['clean'],
-    ['js', 'package-npm-mods'],
+    ['js', 'copy-binaries', 'package-npm-mods'],
     ['zip-it-up'],
     callback
   );
 });
+
+gulp.task('zip-and-upload', function(callback) {
+  return runSequence(
+    ['clean'],
+    ['js', 'copy-binaries', 'package-npm-mods'],
+    ['zip-it-up'],
+    ['upload'],
+    callback
+  );
+});
+
 
 var config = {
   region: 'us-east-1',
@@ -44,6 +60,7 @@ var config = {
   timeout: 10
 }
 
+//this func exits earlier than its process
 gulp.task('upload', function() {
 
   //TODO: pull from gulp-env

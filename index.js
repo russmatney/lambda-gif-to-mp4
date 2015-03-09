@@ -5,7 +5,9 @@ var gm = require('gm')
             .subClass({ imageMagick: true }); // Enable ImageMagick integration.
 var util = require('util');
 
-var ffmpegCommand = require('fluent-ffmpeg');
+process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
+
+var ffmpeg = require('fluent-ffmpeg');
 
 // constants
 var MAX_WIDTH  = 100;
@@ -16,9 +18,31 @@ var s3 = new AWS.S3();
 
 exports.handler = function(event, context) {
 
-  var command = ffmpegCommand();
-  console.log('ffmpeg command:');
-  console.log(command);
+  console.log("PATH")
+  console.log(process.env['PATH'])
+
+  process.env['FFMPEG_PATH'] = '/tmp/ffmpeg'
+  process.env['FFPROBE_PATH'] = '/tmp/ffprobe'
+
+  var exec = require('child_process').exec,
+    child;
+
+  child = exec('cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg',
+    function (error, stdout, stderr) {
+      console.log('stdout: ' + stdout);
+      console.log('stderr: ' + stderr);
+      if (error !== null) {
+        console.log('exec error: ' + error);
+      }
+    }
+  );
+
+  ffmpeg.getAvailableFormats(function(err, formats) {
+    console.log('error getting formats');
+    console.log(err);
+    console.log('Available formats:');
+    console.dir(formats);
+  });
 
 
   // Read options from the event.
