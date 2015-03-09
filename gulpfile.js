@@ -6,7 +6,7 @@ var runSequence = require('run-sequence');
 
 gulp.task('clean', function(cb) {
   del('./dist',
-    del('./archive.zip', cb)
+    del('./dist.zip', cb)
   );
 });
 
