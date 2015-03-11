@@ -18,9 +18,9 @@
     "run-sequence": "^1.0.2"
   },
   "dependencies": {
-    "async": "^0.9.0",
     "aws-sdk": "^2.1.16",
     "fluent-ffmpeg": "^2.0.0-rc3",
-    "gm": "^1.17.0"
+    "gm": "^1.17.0",
+    "q": "^1.2.0"
   }
 }
