@@ -9,7 +9,7 @@ process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'
 
 var s3 = new AWS.S3();
 
-exports.moveAndChmodFfmpegBinary = function() {
+var moveAndChmodFfmpegBinary = function() {
   var def = q.defer()
 
   require('child_process').exec(
@@ -26,7 +26,7 @@ exports.moveAndChmodFfmpegBinary = function() {
   return def.promise;
 }
 
-exports.printFormats = function() {
+var printFormats = function() {
     var def = q.defer()
 
     ffmpeg.getAvailableFormats(function(err, formats) {
@@ -51,10 +51,10 @@ exports.handler = function(event, context) {
   var promises = [];
 
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
-    promises.push(this.moveAndChmodFfmpegBinary);
+    promises.push(moveAndChmodFfmpegBinary);
   }
 
-  promises.push(this.printFormats);
+  promises.push(printFormats);
 
   promises.reduce(q.when, q()).fail(function(err){
     console.log('rejected err');
