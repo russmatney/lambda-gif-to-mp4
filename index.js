@@ -9,38 +9,28 @@ process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'
 
 var s3 = new AWS.S3();
 
-exports.handler = function(event, context) {
+exports.moveAndChmodFfmpegBinary = function() {
+  var def = q.defer()
 
-  process.env['FFMPEG_PATH'] = '/tmp/ffmpeg';
-  process.env['FFPROBE_PATH'] = '/tmp/ffprobe';
-
-  var moveAndChmodFfmpegBinary = function() {
-    var def = q.defer()
-
-    require('child_process').exec(
-      'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg',
-      function (error, stdout, stderr) {
-        console.log('stdout: ' + stdout);
-        console.log('stderr: ' + stderr);
-        if (error !== null) {
-          console.log('exec error: ' + error);
-          def.reject(error)
-        } else {
-          def.resolve()
-        }
+  require('child_process').exec(
+    'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg',
+    function (error, stdout, stderr) {
+      if (error) {
+        def.reject(error)
+      } else {
+        def.resolve()
       }
-    )
+    }
+  )
 
-    return def.promise;
-  }
+  return def.promise;
+}
 
-  var printFormats = function() {
+exports.printFormats = function() {
     var def = q.defer()
 
     ffmpeg.getAvailableFormats(function(err, formats) {
       if (err) {
-        console.log('error getting formats');
-        console.log(err);
         def.reject(err);
       } else {
         console.log('Available formats:');
@@ -50,19 +40,25 @@ exports.handler = function(event, context) {
     });
 
     return def.promise;
-  }
+}
+
+exports.handler = function(event, context) {
+  //assign these for prod – if ffmpeg-fluent doesn't find them,
+  //it falls back to the machine's local `ffmpeg`
+  process.env['FFMPEG_PATH'] = '/tmp/ffmpeg';
+  process.env['FFPROBE_PATH'] = '/tmp/ffprobe';
 
   var promises = [];
 
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
-    promises.push(moveAndChmodFfmpegBinary);
+    promises.push(this.moveAndChmodFfmpegBinary);
   }
 
-  promises.push(printFormats);
+  promises.push(this.printFormats);
 
-  console.log('promises');
-  console.log(promises);
-
-  promises.reduce(q.when, q());
+  promises.reduce(q.when, q()).fail(function(err){
+    console.log('rejected err');
+    console.log(err);
+  });
 
 };
