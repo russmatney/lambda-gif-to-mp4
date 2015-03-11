@@ -57,9 +57,38 @@ gulp.task('zip-and-upload', function(callback) {
 
 var config = {
   region: 'us-east-1',
+  handler: 'index.handler',
+  role: 'arn:aws:iam::106586740595:role/executionrole',
   functionName: 'gif2mp4',
   timeout: 10
 }
+
+//this func exits earlier than its process
+gulp.task('upload-new', function() {
+
+  AWS.config.region = config.region;
+  var lambda = new AWS.Lambda();
+
+  var params = {
+    FunctionName: config.functionName,
+    Handler: config.handler,
+    Mode: "event",
+    Role: config.role,
+    Runtime: "nodejs",
+    Timeout: config.timeout
+  };
+
+  fs.readFile('./dist.zip', function(err, data) {
+    params['FunctionZip'] = data;
+    lambda.uploadFunction(params, function(err, data) {
+      if (err) {
+        var warning = 'Package upload failed. '
+        warning += 'Check your iam:PassRole permissions.'
+        gutil.log(warning);
+      }
+    });
+  });
+});
 
 //this func exits earlier than its process
 gulp.task('upload', function() {
@@ -72,7 +101,7 @@ gulp.task('upload', function() {
   lambda.getFunction({FunctionName: functionName}, function(err, data) {
     if (err) {
       if (err.statusCode === 404) {
-        var warning = 'Unable to find lambda function ' + deploy_function + '. '
+        var warning = 'Unable to find lambda function ' + functionName + '. '
         warning += 'Verify the lambda function name and AWS region are correct.'
         gutil.log(warning);
       } else {

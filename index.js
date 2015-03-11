@@ -5,9 +5,15 @@ var gm = require('gm')
 var ffmpeg = require('fluent-ffmpeg');
 var q = require('q');
 
-var handleS3Event = require('./handle-s3-event');
+if (process.env['LAMBDA_TASK_ROOT']) {
+  process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
+  process.env.NODE_PATH = process.env['LAMBDA_TASK_ROOT'] + '/'
+}
 
-process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
+console.log("process.env.NODE_PATH")
+console.log(process.env.NODE_PATH)
+
+var handleS3Event = require('./handle-s3-event.js');
 
 var s3 = new AWS.S3();
 
