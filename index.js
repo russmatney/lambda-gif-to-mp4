@@ -56,6 +56,13 @@ exports.handler = function(event, context) {
 
   promises.push(printFormats);
 
+  //handle s3 input json
+  //verify its a file we want
+  //fetch .gif from s3
+  //convert to .mp4
+  //send it back to s3
+  //success
+
   promises.reduce(q.when, q()).fail(function(err){
     console.log('rejected err');
     console.log(err);
