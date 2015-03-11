@@ -10,11 +10,14 @@
   "license": "ISC",
   "devDependencies": {
     "aws-sdk": "^2.1.16",
+    "chai": "^2.1.1",
     "del": "^1.1.1",
     "gulp": "^3.8.11",
     "gulp-install": "^0.2.0",
+    "gulp-mocha": "^2.0.0",
     "gulp-util": "^3.0.4",
     "gulp-zip": "^2.0.3",
+    "mocha": "^2.2.1",
     "run-sequence": "^1.0.2"
   },
   "dependencies": {

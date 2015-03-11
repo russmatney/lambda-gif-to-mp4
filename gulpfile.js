@@ -6,6 +6,7 @@ var install = require('gulp-install');
 var runSequence = require('run-sequence');
 var AWS = require('aws-sdk');
 var fs = require('fs');
+var mocha = require('gulp-mocha');
 
 gulp.task('clean', function(cb) {
   del(['./dist', './dist.zip'], cb);
@@ -56,7 +57,7 @@ gulp.task('zip-and-upload', function(callback) {
 
 var config = {
   region: 'us-east-1',
-  functionName: 'resizeImage',
+  functionName: 'gif2mp4',
   timeout: 10
 }
 
@@ -104,6 +105,16 @@ gulp.task('upload', function() {
   });
 });
 
-gulp.task('default', function() {
-  console.log('sup, default task');
+gulp.task('watch', function() {
+  gulp.watch(
+    ['*.js', 'test/*.js', 'fixtures/*.js'],
+    ['mocha']
+  );
 });
+
+gulp.task('mocha', function() {
+  return gulp.src('test/*.spec.js')
+    .pipe(mocha())
+});
+
+gulp.task('default', ['mocha', 'watch']);
