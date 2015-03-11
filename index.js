@@ -5,6 +5,8 @@ var gm = require('gm')
 var ffmpeg = require('fluent-ffmpeg');
 var q = require('q');
 
+var handleS3Event = require('./handle-s3-event');
+
 process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
 
 var s3 = new AWS.S3();
@@ -42,6 +44,20 @@ var printFormats = function() {
     return def.promise;
 }
 
+var lastFunc = function(context) {
+  var awsContext = context;
+  return function(s3Data) {
+    var def = q.defer()
+
+    console.log('s3Data');
+    console.log(s3Data);
+    def.resolve()
+    awsContext.done()
+
+    return def.promise
+  }
+}
+
 exports.handler = function(event, context) {
   //assign these for prod – if ffmpeg-fluent doesn't find them,
   //it falls back to the machine's local `ffmpeg`
@@ -55,8 +71,9 @@ exports.handler = function(event, context) {
   }
 
   promises.push(printFormats);
+  promises.push(handleS3Event(event));
+  promises.push(lastFunc(context));
 
-  //handle s3 input json
   //verify its a file we want
   //fetch .gif from s3
   //convert to .mp4

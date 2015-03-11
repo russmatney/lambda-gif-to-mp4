@@ -1,3 +1,10 @@
 var index = require('./index');
 
-index.handler();
+var sampleEvent = require('./fixtures/sample-input');
+var context = {
+  done: function() {
+    console.log('context.done() called');
+  }
+}
+
+index.handler(sampleEvent, context);
