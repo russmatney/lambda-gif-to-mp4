@@ -149,8 +149,7 @@ exports.handler = function(event, context) {
             gm(options.body).identify(function(err, data) {
               if (err) { def.reject(err); }
               else {
-                console.log('id-ed gif:');
-
+                options.body = null;
                 console.log('delay: ' + data.Delay);
                 var speed = data.Delay.substring(0, 2);
                 speed = 100 / speed;
@@ -173,8 +172,6 @@ exports.handler = function(event, context) {
                       for(var x = 0; x < numberOfLoops; x++) {
 
                         createLoopPromises.push(function(file, fileNum) {
-                          console.log('fileNum ' + fileNum);
-
                             var d = q.defer()
 
                             function paddy(number, padding) {
@@ -184,13 +181,11 @@ exports.handler = function(event, context) {
 
                             var fileSuffix = '-' + paddy(fileNum, 3) + '.png';
                             var newFileName = file.replace(/-[^-]*$/, fileSuffix)
-                            console.log('new file name: ' + newFileName);
                             gm(file).write(newFileName, function(err) {
                               if (err) {
                                 console.log(err);
                                 d.reject(err);
                               } else {
-                                console.log('new png written');
                                 d.resolve()
                               }
                             })
@@ -203,7 +198,6 @@ exports.handler = function(event, context) {
                     q.all(createLoopPromises)
                       .then(function(results) {
                         console.log('loop stack of pngs written');
-                        console.log(results);
 
                         var pngsBlurb = dirPath + '/' + basename + '-%03d.png';
                         var mp4Path = dirPath + '/' + basename + '.mp4';
