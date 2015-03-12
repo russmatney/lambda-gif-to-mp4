@@ -41,8 +41,6 @@ var printFormats = function() {
       if (err) {
         def.reject(err);
       } else {
-        console.log('Available formats:');
-        console.dir(formats.wtv);
         def.resolve()
       }
     });
@@ -64,6 +62,15 @@ var lastFunc = function(context) {
   }
 }
 
+//TODO: unit test
+var isValidKey = function(key) {
+  function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+  }
+
+  return endsWith(key, '.gif')
+}
+
 exports.handler = function(event, context) {
   //assign these for prod – if ffmpeg-fluent doesn't find them,
   //it falls back to the machine's local `ffmpeg`
@@ -78,13 +85,25 @@ exports.handler = function(event, context) {
 
   promises.push(printFormats);
   promises.push(handleS3Event(event));
-  promises.push(lastFunc(context));
 
-  //verify its a file we want
+  promises.push(function(s3Data) {
+    var def = q.defer()
+
+    if (isValidKey(s3Data.srcKey)) {
+      def.resolve(s3Data);
+    } else {
+      def.reject("Uploaded file does not end in `.gif`")
+    }
+
+    return def.promise
+  });
+
   //fetch .gif from s3
   //convert to .mp4
   //send it back to s3
   //success
+
+  promises.push(lastFunc(context));
 
   promises.reduce(q.when, q()).fail(function(err){
     console.log('rejected err');
