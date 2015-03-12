@@ -5,6 +5,8 @@ var q = require('q');
 var fs = require('fs');
 var path = require('path');
 var mime = require('mime');
+var gm = require('gm')
+          .subClass({imageMagick: true})
 
 process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
 
@@ -97,9 +99,11 @@ exports.handler = function(event, context) {
 
     s3.getObject(params)
       .on('httpData', function(chunk) {
+        console.log('httpData chunk');
         file.write(chunk)
       })
       .on('httpDone', function() {
+        console.log('httpDone son');
         file.end()
         def.resolve({
           s3Data: s3Data,
@@ -108,11 +112,29 @@ exports.handler = function(event, context) {
       })
       .send();
 
+    file.on('end', function() {
+      console.log(file);
+    });
+
     return def.promise;
   });
 
   promises.push(function(options) {
     var def = q.defer()
+
+    console.log('options');
+    console.log(options);
+
+    gm(options.gifPath)
+      .identify(function(err, data) {
+        if (err) {
+          console.log('error identifying gif');
+          console.log(err);
+        } else {
+          console.log('id-ed gif:');
+          console.log(data);
+        }
+      });
 
     var basename = path.basename(options.gifPath, '.gif')
     var mp4Path = tmpPrefix + basename + '.mp4';
