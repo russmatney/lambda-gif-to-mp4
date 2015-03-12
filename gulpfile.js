@@ -39,7 +39,6 @@ gulp.task('zip-it-up', function() {
     .pipe(gulp.dest('./'));
 });
 
-
 gulp.task('zip', function(callback) {
   return runSequence(
     ['clean'],
@@ -147,6 +146,7 @@ gulp.task('watch', function() {
 });
 
 gulp.task('mocha', function() {
+  process.env.NODE_ENV = 'testing'
   return gulp.src('test/*.spec.js')
     .pipe(mocha())
 });

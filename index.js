@@ -89,6 +89,7 @@ exports.handler = function(event, context) {
   promises.reduce(q.when, q()).fail(function(err){
     console.log('rejected err');
     console.log(err);
+    context.done(err);
   });
 
 };
