@@ -110,6 +110,7 @@ exports.handler = function(event, context) {
     return def.promise;
   });
 
+  /*
   promises.push(function(options) {
     var def = q.defer()
 
@@ -124,6 +125,7 @@ exports.handler = function(event, context) {
 
     return def.promise
   });
+  */
 
 
   promises.push(function(options) {
@@ -172,7 +174,7 @@ exports.handler = function(event, context) {
 
                         createLoopPromises.push(function(file, fileNum) {
                           console.log('fileNum ' + fileNum);
-                          return function() {
+
                             var d = q.defer()
 
                             function paddy(number, padding) {
@@ -193,16 +195,15 @@ exports.handler = function(event, context) {
                               }
                             })
                             return d.promise;
-                          }
                         }(file, x * frameCount + frameNum))
                       }
                       frameNum++;
-                      console.log('frameNum incremented: ' + frameNum)
                     });
 
-                    createLoopPromises.reduce(q.when, q())
+                    q.all(createLoopPromises)
                       .then(function(results) {
                         console.log('loop stack of pngs written');
+                        console.log(results);
 
                         var pngsBlurb = dirPath + '/' + basename + '-%03d.png';
                         var mp4Path = dirPath + '/' + basename + '.mp4';
