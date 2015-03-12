@@ -5,6 +5,7 @@ var gm = require('gm')
 var ffmpeg = require('fluent-ffmpeg');
 var q = require('q');
 var fs = require('fs');
+var path = require('path');
 var mime = require('mime');
 
 process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
@@ -116,12 +117,80 @@ exports.handler = function(event, context) {
     return def.promise;
   });
 
-  //convert to .mp4
+  promises.push(function(options) {
+    var def = q.defer()
+
+    //convert to .mp4
+
+    var basename = path.basename(options.file.path, '.gif')
+    //make dir w/ basename
+    var dirPath = './' + basename
+    fs.mkdir(dirPath, function(err) {
+      if (err) { def.reject(err) }
+      //TODO: wrap in else{} to prevent onwardcy after errorcy
+
+      //convert to .png, drop into that folder
+      var pngsPath = dirPath + '/' + basename + '.png';
+      gm(options.file.path).write(pngsPath, function(err) {
+        if (err) { def.reject(err) }
+        else {
+          console.log('png written');
+
+          gm(options.file.path)
+            .identify(function(err, data) {
+              if (err) { def.reject(err) }
+              else {
+                console.log('delay: ');
+                console.log(data.Delay)
+                //TODO: should probably split the string on the `x`
+                var speed = data.Delay.substring(0, 2);
+                speed = 100 / speed
+                console.log('speed: ' + speed);
+
+
+                //get number of frames from created dir
+                //create frames for 5 loops
+                //convert to mp4
+
+                var pngsBlurb = dirPath + '/' + basename + '-%d.png';
+                var mp4Path = dirPath + '/' + basename + '.mp4';
+                console.log(pngsBlurb);
+                ffmpeg(pngsBlurb)
+                  .inputOptions([
+                    '-y',
+                  ])
+                  .outputOptions([
+                    '-r ' + speed,
+                    '-pix_fmt yuv420p'
+                  ])
+                  .videoCodec('libx264')
+                  .on('error', function(err) {
+                    console.log('mp4 save error')
+                    console.log(err);
+                    def.reject(err);
+                  })
+                  .on('end', function() {
+                    console.log('mp4 save end')
+                    options.mp4Path = mp4Path;
+                    def.resolve(options);
+                  })
+                  .save(mp4Path)
+
+              }
+            });
+
+        }
+      });
+    })
+
+    return def.promise
+  });
 
   promises.push(function(options) {
+    //needs dstBucket, dstKey, file.path
     var def = q.defer();
 
-    var stream = fs.createReadStream(options.file.path);
+    var stream = fs.createReadStream(options.mp4Path);
 
     var params = {
       Bucket: options.s3Data.srcBucket + "-resized",
@@ -145,7 +214,7 @@ exports.handler = function(event, context) {
     var def = q.defer()
     console.log('successful conversion and upload');
     def.resolve()
-    awsContext.done()
+    context.done()
     return def.promise
   })
 
