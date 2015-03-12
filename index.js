@@ -36,7 +36,7 @@ var moveAndChmodFfmpegBinary = function() {
 
   //TODO: abstract this
   proc.exec(
-    'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/bash-scrap /tmp/.; chmod 755 /var/task/bash-scrap',
+    'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/bash-scrap /tmp/.; chmod 755 /tmp/bash-scrap',
     function (error, stdout, stderr) {
       if (error) {
         console.log('error setting up bins');
@@ -49,20 +49,6 @@ var moveAndChmodFfmpegBinary = function() {
   )
 
   return def.promise;
-}
-
-var printFormats = function() {
-    var def = q.defer()
-
-    ffmpeg.getAvailableFormats(function(err, formats) {
-      if (err) {
-        def.reject(err);
-      } else {
-        def.resolve()
-      }
-    });
-
-    return def.promise;
 }
 
 //TODO: unit test
@@ -85,8 +71,6 @@ exports.handler = function(event, context) {
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
     promises.push(moveAndChmodFfmpegBinary);
   }
-
-  promises.push(printFormats);
   promises.push(handleS3Event(event));
 
   promises.push(function(s3Data) {
