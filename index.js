@@ -95,18 +95,17 @@ exports.handler = function(event, context) {
     var def = q.defer();
 
     var params = {Bucket: s3Data.srcBucket, Key: s3Data.srcKey};
-    var filePath = tmpPrefix + s3Data.srcKey
-    var file = fs.createWriteStream(filePath);
 
-    s3.getObject(params)
-      .on('success', function() {
-        console.log('httpDone son');
+    s3.getObject(params, function(err, data) {
+      if (err) { def.reject(err) }
+      else {
         def.resolve({
           s3Data: s3Data,
-          gifPath: file.path
+          gifPath: '',
+          body: data.Body
         });
-      })
-      .createReadStream().pipe(file);
+      }
+    })
 
     return def.promise;
   });
@@ -114,10 +113,25 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     var def = q.defer()
 
+    gm(options.body).identify(function(err, data) {
+      if (err) { def.reject(err); }
+      else {
+        console.log('id-ed gif:');
+        console.log(data);
+        def.resolve(options)
+      }
+    });
+
+    return def.promise
+  });
+
+
+  promises.push(function(options) {
+    var def = q.defer()
     console.log('options');
     console.log(options);
 
-    var basename = path.basename(options.gifPath, '.gif');
+    var basename = path.basename(options.s3Data.srcKey, '.gif');
     var dirPath = tmpPrefix + basename;
     mkdirp(dirPath, function(err) {
       if (err) { def.reject(err) }
@@ -125,12 +139,12 @@ exports.handler = function(event, context) {
         console.log('created dir: ' + dirPath);
 
         var pngsPath = dirPath + '/' + basename + '.png';
-        gm(options.gifPath).write(pngsPath, function(err) {
+        gm(options.body).write(pngsPath, function(err) {
           if (err) { def.reject(err) }
           else {
             console.log('pngs written');
 
-            gm(options.gifPath).identify(function(err, data) {
+            gm(options.body).identify(function(err, data) {
               if (err) { def.reject(err); }
               else {
                 console.log('id-ed gif:');
