@@ -63,8 +63,8 @@ var config = {
   region: 'us-east-1',
   handler: 'index.handler',
   role: 'arn:aws:iam::106586740595:role/executionrole',
-  functionName: 'gif2mp4',
-  timeout: 30
+  functionName: 'runScript',
+  timeout: 20
 }
 
 //this func exits earlier than its process

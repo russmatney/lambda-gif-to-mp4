@@ -28,8 +28,6 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
 var s3 = new AWS.S3();
 
 exports.handler = function(event, context) {
-  //assign these for prod – if ffmpeg-fluent doesn't find them,
-  //it falls back to the machine's local `ffmpeg`
   process.env['FFMPEG_PATH'] = '/tmp/ffmpeg';
   process.env['FFPROBE_PATH'] = '/tmp/ffprobe';
 
@@ -39,9 +37,8 @@ exports.handler = function(event, context) {
     promises.push(function() {
       var def = q.defer()
 
-      //TODO: abstract this
       proc.exec(
-        'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/bash-scrap /tmp/.; chmod 755 /var/task/bash-scrap',
+        'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/bash-scrap /tmp/.; chmod 755 /tmp/bash-scrap',
         function (error, stdout, stderr) {
           if (error) {
             console.log('error setting up bins');
@@ -57,7 +54,7 @@ exports.handler = function(event, context) {
     })
   }
 
-  promises.push(function(options) {
+  promises.push(function() {
     var def = q.defer()
 
     console.log('launching bash script');
@@ -72,7 +69,7 @@ exports.handler = function(event, context) {
     });
     child.on('close', function (code) {
       console.log(code);
-      def.resolve(options);
+      def.resolve();
 
       context.done()
     });
