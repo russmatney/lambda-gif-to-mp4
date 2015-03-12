@@ -134,8 +134,7 @@ exports.handler = function(event, context) {
       if (err) {
         def.reject(err);
       } else {
-        console.log('successful upload');
-        def.resolve({})
+        def.resolve()
       }
     });
 
@@ -144,6 +143,7 @@ exports.handler = function(event, context) {
 
   promises.push(function() {
     var def = q.defer()
+    console.log('successful conversion and upload');
     def.resolve()
     awsContext.done()
     return def.promise
@@ -151,7 +151,7 @@ exports.handler = function(event, context) {
 
   promises.reduce(q.when, q())
     .fail(function(err){
-      console.log('rejected err');
+      console.log('promise rejected with err');
       console.log(err);
       context.done(err);
     });
