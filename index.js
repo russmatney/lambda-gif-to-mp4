@@ -21,7 +21,7 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
   handleS3Event = require('handle-s3-event');
   tmpPrefix = '/tmp/';
-  pathToBash = './bash-scrap';
+  pathToBash = '/tmp/bash-scrap';
 } else {
   //local
   handleS3Event = require('./local_modules/handle-s3-event');
@@ -34,13 +34,15 @@ var s3 = new AWS.S3();
 var moveAndChmodFfmpegBinary = function() {
   var def = q.defer()
 
+  //TODO: abstract this
   proc.exec(
-    'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; chmod 755 /var/task/bash-scrap',
+    'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/bash-scrap /tmp/.; chmod 755 /var/task/bash-scrap',
     function (error, stdout, stderr) {
-      console.log("moved, updated binaries");
       if (error) {
+        console.log('error setting up bins');
         def.reject(error)
       } else {
+        console.log("moved, updated binaries");
         def.resolve()
       }
     }
@@ -122,6 +124,8 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     var def = q.defer()
+
+    console.log('launching bash script');
 
     var child = proc.spawn(pathToBash);
     child.stdout.on('data', function (data) {
