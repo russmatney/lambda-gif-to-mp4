@@ -4,6 +4,8 @@ var gm = require('gm')
             .subClass({ imageMagick: true }); // Enable ImageMagick integration.
 var ffmpeg = require('fluent-ffmpeg');
 var q = require('q');
+var fs = require('fs');
+var mime = require('mime');
 
 process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
 
@@ -99,9 +101,56 @@ exports.handler = function(event, context) {
   });
 
   //fetch .gif from s3
+
+  promises.push(function(s3Data) {
+    //TODO: unit tests
+    var def = q.defer();
+
+    var params = {Bucket: s3Data.srcBucket, Key: s3Data.srcKey};
+    var s3Req = s3.getObject(params)
+    s3Req.on('success', function() {
+      def.resolve({
+        file: file,
+        s3Data: s3Data
+      });
+    })
+    s3Req.on('error', function(error) {
+      def.reject(error);
+    })
+
+    //TODO: rethink path, ensure folder exists
+    var file = fs.createWriteStream('./tmp/' + s3Data.srcKey);
+    s3Req.createReadStream().pipe(file);
+
+    return def.promise;
+  });
+
   //convert to .mp4
+
   //send it back to s3
-  //success
+  promises.push(function(options) {
+    var def = q.defer();
+
+    var stream = fs.createReadStream(options.file.path);
+    //TODO: build elsewhere
+    var params = {
+      Bucket: options.s3Data.srcBucket + "-resized",
+      Key: options.s3Data.srcKey + "-converted.gif",
+      Body: stream,
+      ContentType: mime.lookup(options.file.path)
+    };
+
+    s3.putObject(params, function(err, data) {
+      if (err) {
+        def.reject(err);
+      } else {
+        console.log('successful upload');
+        def.resolve({})
+      }
+    });
+
+    return def.promise;
+  });
 
   promises.push(lastFunc(context));
 
