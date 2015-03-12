@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
 
-var handleS3Event = require('../handle-s3-event');
+var handleS3Event = require('../local_modules/handle-s3-event');
 
 describe('handleS3Event', function() {
   it('should exist', function() {
