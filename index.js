@@ -13,9 +13,11 @@ process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
   var handleS3Event = require('handle-s3-event');
+  var tmpPrefix = '/tmp/';
 } else {
   //local
   var handleS3Event = require('./local_modules/handle-s3-event');
+  var tmpPrefix = './';
 }
 
 var s3 = new AWS.S3();
@@ -103,14 +105,7 @@ exports.handler = function(event, context) {
       def.reject(error);
     })
 
-    var filePath = s3Data.srcKey
-    if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
-      //production
-      filePath = '/tmp/' + filePath
-    } else {
-      //local
-      filePath = './' + filePath
-    }
+    var filePath = tmpPrefix + s3Data.srcKey
     var file = fs.createWriteStream(filePath);
     s3Req.createReadStream().pipe(file);
 
@@ -124,7 +119,7 @@ exports.handler = function(event, context) {
 
     var basename = path.basename(options.file.path, '.gif')
     //make dir w/ basename
-    var dirPath = './' + basename
+    var dirPath = tmpPrefix + basename
     fs.mkdir(dirPath, function(err) {
       if (err) { def.reject(err) }
       //TODO: wrap in else{} to prevent onwardcy after errorcy
@@ -146,7 +141,6 @@ exports.handler = function(event, context) {
                 var speed = data.Delay.substring(0, 2);
                 speed = 100 / speed
                 console.log('speed: ' + speed);
-
 
                 //get number of frames from created dir
                 //create frames for 5 loops
@@ -192,11 +186,20 @@ exports.handler = function(event, context) {
 
     var stream = fs.createReadStream(options.mp4Path);
 
+    console.log('srcKey');
+    console.log(options.s3Data.srcKey);
+    console.log('mp4 path');
+    console.log(options.mp4Path);
+    var newBase = path.basename(options.mp4Path);
+    var dstKey = path.normalize(options.s3Data.srcKey) + newBase;
+    //TODO: needs work
+    console.log(dstKey);
+
     var params = {
       Bucket: options.s3Data.srcBucket + "-resized",
-      Key: "new-" + options.s3Data.srcKey,
+      Key: newBase,
       Body: stream,
-      ContentType: mime.lookup(options.file.path)
+      ContentType: mime.lookup(options.mp4Path)
     };
 
     s3.upload(params).send(function(err, data) {
