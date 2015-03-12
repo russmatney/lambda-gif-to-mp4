@@ -7,6 +7,7 @@ var path = require('path');
 var mime = require('mime');
 var gm = require('gm')
           .subClass({imageMagick: true})
+var mkdirp = require('mkdirp')
 
 process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
 
@@ -98,23 +99,14 @@ exports.handler = function(event, context) {
     var file = fs.createWriteStream(filePath);
 
     s3.getObject(params)
-      .on('httpData', function(chunk) {
-        console.log('httpData chunk');
-        file.write(chunk)
-      })
-      .on('httpDone', function() {
+      .on('success', function() {
         console.log('httpDone son');
-        file.end()
         def.resolve({
           s3Data: s3Data,
           gifPath: file.path
         });
       })
-      .send();
-
-    file.on('end', function() {
-      console.log(file);
-    });
+      .createReadStream().pipe(file);
 
     return def.promise;
   });
@@ -125,45 +117,121 @@ exports.handler = function(event, context) {
     console.log('options');
     console.log(options);
 
-    gm(options.gifPath)
-      .identify(function(err, data) {
-        if (err) {
-          console.log('error identifying gif');
-          console.log(err);
-        } else {
-          console.log('id-ed gif:');
-          console.log(data);
-        }
-      });
+    var basename = path.basename(options.gifPath, '.gif');
+    var dirPath = tmpPrefix + basename;
+    mkdirp(dirPath, function(err) {
+      if (err) { def.reject(err) }
+      else {
+        console.log('created dir: ' + dirPath);
 
-    var basename = path.basename(options.gifPath, '.gif')
-    var mp4Path = tmpPrefix + basename + '.mp4';
+        var pngsPath = dirPath + '/' + basename + '.png';
+        gm(options.gifPath).write(pngsPath, function(err) {
+          if (err) { def.reject(err) }
+          else {
+            console.log('pngs written');
 
-    ffmpeg(options.gifPath)
-      .inputOptions([
-        '-y'
-      ])
-      .outputOptions([
-        '-pix_fmt yuv420p',
-      ])
-      .videoCodec('libx264')
-      .on('start', function(command) {
-        console.log('started: ' + command);
-      })
-      .on('progress', function(progress) {
-        console.log('progress');
-        console.log(progress);
-      })
-      .on('error', function(err) {
-        console.log('mp4 save error')
-        def.reject(err);
-      })
-      .on('end', function(data) {
-        options.mp4Path = mp4Path;
-        def.resolve(options);
-      })
-      .save(mp4Path)
+            gm(options.gifPath).identify(function(err, data) {
+              if (err) { def.reject(err); }
+              else {
+                console.log('id-ed gif:');
 
+                console.log('delay: ' + data.Delay);
+                var speed = data.Delay.substring(0, 2);
+                speed = 100 / speed;
+                console.log('speed: ' + speed);
+
+                //create 5 loop stack of pngs
+                fs.readdir(dirPath, function(err, files) {
+                  if (err) { def.reject(err) }
+                  else {
+                    var frameCount = files.length;
+                    var numberOfLoops = 5;
+
+                    var createLoopPromises = [];
+                    console.log('readdir files: ', files)
+
+                    var frameNum = 0;
+                    files.map(function(file) {
+                      return path.join(dirPath, file);
+                    }).forEach(function(file) {
+                      for(var x = 0; x < numberOfLoops; x++) {
+
+                        createLoopPromises.push(function(file, fileNum) {
+                          console.log('fileNum ' + fileNum);
+                          return function() {
+                            var d = q.defer()
+
+                            function paddy(number, padding) {
+                              var pad = new Array(1 + padding).join('0');
+                              return (pad + number).slice(-pad.length);
+                            }
+
+                            var fileSuffix = '-' + paddy(fileNum, 3) + '.png';
+                            var newFileName = file.replace(/-[^-]*$/, fileSuffix)
+                            console.log('new file name: ' + newFileName);
+                            gm(file).write(newFileName, function(err) {
+                              if (err) {
+                                console.log(err);
+                                d.reject(err);
+                              } else {
+                                console.log('new png written');
+                                d.resolve()
+                              }
+                            })
+                            return d.promise;
+                          }
+                        }(file, x * frameCount + frameNum))
+                      }
+                      frameNum++;
+                      console.log('frameNum incremented: ' + frameNum)
+                    });
+
+                    createLoopPromises.reduce(q.when, q())
+                      .then(function(results) {
+                        console.log('loop stack of pngs written');
+
+                        var pngsBlurb = dirPath + '/' + basename + '-%03d.png';
+                        var mp4Path = dirPath + '/' + basename + '.mp4';
+
+                        ffmpeg(pngsBlurb)
+                          .inputOptions([
+                          ])
+                          .outputOptions([
+                            '-r ' + speed,
+                            '-pix_fmt yuv420p'
+                          ])
+                          .videoCodec('libx264')
+                          .on('start', function(command) {
+                            console.log('started: ' + command);
+                          })
+                          .on('progress', function(progress) {
+                            console.log('progress');
+                            console.log(progress);
+                          })
+                          .on('error', function(err) {
+                            console.log('mp4 save error')
+                            def.reject(err);
+                          })
+                          .on('end', function(data) {
+                            options.mp4Path = mp4Path;
+                            def.resolve(options);
+                          })
+                          .save(mp4Path)
+
+                      });
+
+                  }
+                });
+
+              }
+            })
+
+          }
+
+        })
+
+      }
+    })
     return def.promise;
   });
 
