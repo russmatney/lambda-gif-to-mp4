@@ -9,8 +9,6 @@ var gm = require('gm')
           .subClass({imageMagick: true})
 var mkdirp = require('mkdirp')
 
-var proc = require('child_process');
-
 process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
 
 var handleS3Event;
@@ -35,7 +33,7 @@ var moveAndChmodFfmpegBinary = function() {
   var def = q.defer()
 
   //TODO: abstract this
-  proc.exec(
+  require('child_process').exec(
     'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/bash-scrap /tmp/.; chmod 755 /tmp/bash-scrap',
     function (error, stdout, stderr) {
       if (error) {
@@ -111,7 +109,7 @@ exports.handler = function(event, context) {
 
     console.log('launching bash script');
 
-    var child = proc.spawn(pathToBash);
+    var child = require('child_process').spawn(pathToBash);
     child.stdout.on('data', function (data) {
       console.log("stdout:\n"+data);
     });
