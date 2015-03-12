@@ -64,7 +64,7 @@ var config = {
   handler: 'index.handler',
   role: 'arn:aws:iam::106586740595:role/executionrole',
   functionName: 'gif2mp4',
-  timeout: 60
+  timeout: 30
 }
 
 //this func exits earlier than its process

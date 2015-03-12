@@ -13,14 +13,20 @@ var proc = require('child_process');
 
 process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
 
+var handleS3Event;
+var tmpPrefix;
+var pathToBash;
+
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
-  var handleS3Event = require('handle-s3-event');
-  var tmpPrefix = '/tmp/';
+  handleS3Event = require('handle-s3-event');
+  tmpPrefix = '/tmp/';
+  pathToBash = './bash-scrap';
 } else {
   //local
-  var handleS3Event = require('./local_modules/handle-s3-event');
-  var tmpPrefix = './';
+  handleS3Event = require('./local_modules/handle-s3-event');
+  tmpPrefix = './';
+  pathToBash = './bin/bash-scrap';
 }
 
 var s3 = new AWS.S3();
@@ -29,8 +35,9 @@ var moveAndChmodFfmpegBinary = function() {
   var def = q.defer()
 
   proc.exec(
-    'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg',
+    'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; chmod 755 /var/task/bash-scrap',
     function (error, stdout, stderr) {
+      console.log("moved, updated binaries");
       if (error) {
         def.reject(error)
       } else {
@@ -116,18 +123,18 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     var def = q.defer()
 
-    var pathToBash = './bin/bash-scrap.sh';
-    proc.execFile(pathToBash,
-      function (error, stdout, stderr) {
-        console.log('stdout: ' + stdout);
-        console.log('stderr: ' + stderr);
-        if (error) {
-          def.reject(error)
-        } else {
-          def.resolve(options)
-        }
-      }
-    )
+    var child = proc.spawn(pathToBash);
+    child.stdout.on('data', function (data) {
+      console.log("stdout:\n"+data);
+    });
+    child.stderr.on('data', function (data) {
+      console.log("stderr:\n"+data);
+      def.reject(data);
+    });
+    child.on('close', function (code) {
+      console.log(code);
+      def.resolve(options);
+    });
 
     return def.promise;
   });
