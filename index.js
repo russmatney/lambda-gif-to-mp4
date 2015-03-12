@@ -19,12 +19,12 @@ var handleS3Event;
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
   tmpPrefix = '/tmp/';
-  pathToBash = '/tmp/bash-scrap';
+  pathToBash = '/tmp/gif2mp4';
   handleS3Event = require('handle-s3-event');
 } else {
   //local
   tmpPrefix = './';
-  pathToBash = './bin/bash-scrap';
+  pathToBash = './bin/gif2mp4';
   handleS3Event = require('./local_modules/handle-s3-event');
 }
 
