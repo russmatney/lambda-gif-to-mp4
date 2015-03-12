@@ -1,7 +1,5 @@
 // dependencies
 var AWS = require('aws-sdk');
-var gm = require('gm')
-            .subClass({ imageMagick: true }); // Enable ImageMagick integration.
 var ffmpeg = require('fluent-ffmpeg');
 var q = require('q');
 var fs = require('fs');
@@ -116,86 +114,29 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     var def = q.defer()
 
-    console.log('converting gif to mp4');
-    console.log('options');
-    console.log(options);
-
     var basename = path.basename(options.file.path, '.gif')
-    console.log('basename');
-    console.log(basename);
-    //make dir w/ basename
-    var dirPath = tmpPrefix + basename
-    fs.mkdir(dirPath, function(err) {
-      if (err) { def.reject(err) }
-      else {
-        console.log('created dir: ' + dirPath);
+    var mp4Path = tmpPrefix + basename + '.mp4';
 
-        console.log("trying to id image");
-        gm(options.file.path).identify(function(err, data) {
-          if (err) {
-            console.log('error identifying');
-            console.log(err);
-          }
-          console.log('data');
-          console.log(data);
-        });
+    ffmpeg(options.file.path)
+      .inputOptions([
+        '-y',
+        '-f gif',
+      ])
+      .outputOptions([
+        '-pix_fmt yuv420p'
+      ])
+      .videoCodec('libx264')
+      .on('error', function(err) {
+        console.log('mp4 save error')
+        def.reject(err);
+      })
+      .on('end', function(data) {
+        options.mp4Path = mp4Path;
+        def.resolve(options);
+      })
+      .save(mp4Path)
 
-        //convert to .png, drop into that folder
-        var pngsPath = dirPath + '/' + basename + '.png';
-        console.log('trying to write to pngsPath: ' + pngsPath);
-        gm(options.file.path).write(pngsPath, function(err) {
-          if (err) { def.reject(err) }
-          else {
-            console.log('png written');
-
-            gm(options.file.path)
-              .identify(function(err, data) {
-                if (err) { def.reject(err) }
-                else {
-                  console.log('delay: ');
-                  console.log(data.Delay)
-                  //TODO: should probably split the string on the `x`
-                  var speed = data.Delay.substring(0, 2);
-                  speed = 100 / speed
-                  console.log('speed: ' + speed);
-
-                  //get number of frames from created dir
-                  //create frames for 5 loops
-                  //convert to mp4
-
-                  var pngsBlurb = dirPath + '/' + basename + '-%d.png';
-                  var mp4Path = dirPath + '/' + basename + '.mp4';
-                  console.log(pngsBlurb);
-                  ffmpeg(pngsBlurb)
-                    .inputOptions([
-                      '-y',
-                    ])
-                    .outputOptions([
-                      '-r ' + speed,
-                      '-pix_fmt yuv420p'
-                    ])
-                    .videoCodec('libx264')
-                    .on('error', function(err) {
-                      console.log('mp4 save error')
-                      console.log(err);
-                      def.reject(err);
-                    })
-                    .on('end', function() {
-                      console.log('mp4 save end')
-                      options.mp4Path = mp4Path;
-                      def.resolve(options);
-                    })
-                    .save(mp4Path)
-
-                }
-              });
-
-          }
-        });
-      }
-    })
-
-    return def.promise
+    return def.promise;
   });
 
   promises.push(function(options) {
@@ -204,10 +145,6 @@ exports.handler = function(event, context) {
 
     var stream = fs.createReadStream(options.mp4Path);
 
-    console.log('srcKey');
-    console.log(options.s3Data.srcKey);
-    console.log('mp4 path');
-    console.log(options.mp4Path);
     var newBase = path.basename(options.mp4Path);
     var dstKey = path.normalize(options.s3Data.srcKey) + newBase;
     //TODO: needs work
