@@ -62,8 +62,21 @@ exports.handler = function(event, context) {
     return q.Promise(function(resolve, reject) {
       console.log('fetching from s3')
       console.log(options);
-      resolve(options);
 
+      options.gifPath = '/tmp/' + options.srcKey;
+      var params = {Bucket: options.srcBucket, Key: options.srcKey};
+      var file = require('fs').createWriteStream(options.gifPath);
+      var s3Req = s3.getObject(params)
+
+      s3Req.on('httpDone', function() {
+        console.log('file writen to ' + options.gifPath);
+        resolve(options);
+      })
+      s3Req.on('error', function(err) {
+        reject(err);
+      });
+
+      s3Req.createReadStream().pipe(file)
     })
   });
 
