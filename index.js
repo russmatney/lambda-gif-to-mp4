@@ -94,20 +94,21 @@ exports.handler = function(event, context) {
     var def = q.defer();
 
     var params = {Bucket: s3Data.srcBucket, Key: s3Data.srcKey};
-    var s3Req = s3.getObject(params)
-    s3Req.on('success', function() {
-      def.resolve({
-        file: file,
-        s3Data: s3Data
-      });
-    })
-    s3Req.on('error', function(error) {
-      def.reject(error);
-    })
-
     var filePath = tmpPrefix + s3Data.srcKey
     var file = fs.createWriteStream(filePath);
-    s3Req.createReadStream().pipe(file);
+
+    s3.getObject(params)
+      .on('httpData', function(chunk) {
+        file.write(chunk)
+      })
+      .on('httpDone', function() {
+        file.end()
+        def.resolve({
+          s3Data: s3Data,
+          file: file
+        });
+      })
+      .send();
 
     return def.promise;
   });
