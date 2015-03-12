@@ -65,24 +65,25 @@ exports.handler = function(event, context) {
     })
   });
 
-  promises.push(q.Promise(function(resolve, reject) {
-    console.log('launching bash script');
+  promises.push(function(options) {
+    return q.Promise(function(resolve, reject) {
+      console.log('launching whatever script');
 
-    var child = proc.spawn(pathToBash);
-    child.stdout.on('data', function (data) {
-      console.log("stdout:\n" + data);
+      var child = proc.spawn(pathToBash);
+      child.stdout.on('data', function (data) {
+        console.log("stdout:\n" + data);
+      });
+      child.stderr.on('data', function (data) {
+        console.log("stderr:\n" + data);
+        reject(data);
+      });
+      child.on('close', function (code) {
+        console.log(code);
+        resolve();
+        context.done()
+      });
     });
-    child.stderr.on('data', function (data) {
-      console.log("stderr:\n" + data);
-      reject(data);
-    });
-    child.on('close', function (code) {
-      console.log(code);
-      resolve();
-
-      context.done()
-    });
-  }));
+  });
 
   promises.reduce(q.when, q())
     .fail(function(err){
