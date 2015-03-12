@@ -103,7 +103,7 @@ exports.handler = function(event, context) {
         file.end()
         def.resolve({
           s3Data: s3Data,
-          file: file
+          gifPath: file.path
         });
       })
       .send();
@@ -114,18 +114,24 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     var def = q.defer()
 
-    var basename = path.basename(options.file.path, '.gif')
+    var basename = path.basename(options.gifPath, '.gif')
     var mp4Path = tmpPrefix + basename + '.mp4';
 
-    ffmpeg(options.file.path)
+    ffmpeg(options.gifPath)
       .inputOptions([
-        '-y',
-        '-f gif',
+        '-y'
       ])
       .outputOptions([
-        '-pix_fmt yuv420p'
+        '-pix_fmt yuv420p',
       ])
       .videoCodec('libx264')
+      .on('start', function(command) {
+        console.log('started: ' + command);
+      })
+      .on('progress', function(progress) {
+        console.log('progress');
+        console.log(progress);
+      })
       .on('error', function(err) {
         console.log('mp4 save error')
         def.reject(err);
@@ -143,12 +149,12 @@ exports.handler = function(event, context) {
     //needs dstBucket, dstKey, file.path
     var def = q.defer();
 
+    console.log('options');
+    console.log(options);
     var stream = fs.createReadStream(options.mp4Path);
 
     var newBase = path.basename(options.mp4Path);
-    var dstKey = path.normalize(options.s3Data.srcKey) + newBase;
     //TODO: needs work
-    console.log(dstKey);
 
     var params = {
       Bucket: options.s3Data.srcBucket + "-resized",
