@@ -144,7 +144,7 @@ exports.handler = function(event, context) {
       ContentType: mime.lookup(options.file.path)
     };
 
-    s3.putObject(params, function(err, data) {
+    s3.upload(params).send(function(err, data) {
       if (err) {
         def.reject(err);
       } else {
