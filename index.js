@@ -37,22 +37,24 @@ exports.handler = function(event, context) {
   var promises = [];
 
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
-    promises.push(q.Promise(function(resolve, reject, notify) {
+    promises.push(function() {
+      return q.Promise(function(resolve, reject, notify) {
 
-      proc.exec(
-        'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/bash-scrap /tmp/.; chmod 755 /tmp/bash-scrap',
-        function (error, stdout, stderr) {
-          if (error) {
-            console.log('error setting up bins');
-            reject(error)
-          } else {
-            console.log("moved, updated binaries");
-            resolve()
+        proc.exec(
+          'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/bash-scrap /tmp/.; chmod 755 /tmp/bash-scrap',
+          function (error, stdout, stderr) {
+            if (error) {
+              console.log('error setting up bins');
+              reject(error)
+            } else {
+              console.log("updated binaries");
+              resolve()
+            }
           }
-        }
-      )
+        )
+      });
 
-    }))
+    })
   }
 
   promises.push(handleS3Event(event))
