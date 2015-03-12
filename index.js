@@ -50,20 +50,6 @@ var printFormats = function() {
     return def.promise;
 }
 
-var lastFunc = function(context) {
-  var awsContext = context;
-  return function(s3Data) {
-    var def = q.defer()
-
-    console.log('s3Data');
-    console.log(s3Data);
-    def.resolve()
-    awsContext.done()
-
-    return def.promise
-  }
-}
-
 //TODO: unit test
 var isValidKey = function(key) {
   function endsWith(str, suffix) {
@@ -94,7 +80,7 @@ exports.handler = function(event, context) {
     if (isValidKey(s3Data.srcKey)) {
       def.resolve(s3Data);
     } else {
-      def.reject("Uploaded file does not end in `.gif`")
+      def.reject("Uploaded file does not end in `.gif`: " + s3Data.srcKey)
     }
 
     return def.promise
@@ -156,12 +142,18 @@ exports.handler = function(event, context) {
     return def.promise;
   });
 
-  promises.push(lastFunc(context));
+  promises.push(function() {
+    var def = q.defer()
+    def.resolve()
+    awsContext.done()
+    return def.promise
+  })
 
-  promises.reduce(q.when, q()).fail(function(err){
-    console.log('rejected err');
-    console.log(err);
-    context.done(err);
-  });
+  promises.reduce(q.when, q())
+    .fail(function(err){
+      console.log('rejected err');
+      console.log(err);
+      context.done(err);
+    });
 
 };
