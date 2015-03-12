@@ -100,8 +100,6 @@ exports.handler = function(event, context) {
     return def.promise
   });
 
-  //fetch .gif from s3
-
   promises.push(function(s3Data) {
     //TODO: unit tests
     var def = q.defer();
@@ -118,8 +116,15 @@ exports.handler = function(event, context) {
       def.reject(error);
     })
 
-    //TODO: rethink path, ensure folder exists
-    var file = fs.createWriteStream('./tmp/' + s3Data.srcKey);
+    var filePath = s3Data.srcKey
+    if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
+      //production
+      filePath = '/tmp/' + filePath
+    } else {
+      //local
+      filePath = './' + filePath
+    }
+    var file = fs.createWriteStream(filePath);
     s3Req.createReadStream().pipe(file);
 
     return def.promise;
@@ -127,15 +132,14 @@ exports.handler = function(event, context) {
 
   //convert to .mp4
 
-  //send it back to s3
   promises.push(function(options) {
     var def = q.defer();
 
     var stream = fs.createReadStream(options.file.path);
-    //TODO: build elsewhere
+
     var params = {
       Bucket: options.s3Data.srcBucket + "-resized",
-      Key: options.s3Data.srcKey + "-converted.gif",
+      Key: "new-" + options.s3Data.srcKey,
       Body: stream,
       ContentType: mime.lookup(options.file.path)
     };
