@@ -9,6 +9,8 @@ var gm = require('gm')
           .subClass({imageMagick: true})
 var mkdirp = require('mkdirp')
 
+var proc = require('child_process');
+
 process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
 
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
@@ -26,7 +28,7 @@ var s3 = new AWS.S3();
 var moveAndChmodFfmpegBinary = function() {
   var def = q.defer()
 
-  require('child_process').exec(
+  proc.exec(
     'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg',
     function (error, stdout, stderr) {
       if (error) {
@@ -110,6 +112,28 @@ exports.handler = function(event, context) {
     return def.promise;
   });
 
+
+  promises.push(function(options) {
+    var def = q.defer()
+
+    var pathToBash = './bin/bash-scrap.sh';
+    proc.execFile(pathToBash,
+      function (error, stdout, stderr) {
+        console.log('stdout: ' + stdout);
+        console.log('stderr: ' + stderr);
+        if (error) {
+          def.reject(error)
+        } else {
+          def.resolve(options)
+        }
+      }
+    )
+
+    return def.promise;
+  });
+
+
+
   /*
   promises.push(function(options) {
     var def = q.defer()
@@ -128,6 +152,7 @@ exports.handler = function(event, context) {
   */
 
 
+  /*
   promises.push(function(options) {
     var def = q.defer()
     console.log('options');
@@ -243,10 +268,13 @@ exports.handler = function(event, context) {
     })
     return def.promise;
   });
+  */
 
   promises.push(function(options) {
     //needs dstBucket, dstKey, file.path
     var def = q.defer();
+
+    options.mp4Path = options.s3Data.srcKey;
 
     console.log('options');
     console.log(options);
