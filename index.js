@@ -115,15 +115,33 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     var def = q.defer()
 
+    console.log('converting gif to mp4');
+    console.log('options');
+    console.log(options);
+
     var basename = path.basename(options.file.path, '.gif')
+    console.log('basename');
+    console.log(basename);
     //make dir w/ basename
     var dirPath = tmpPrefix + basename
     fs.mkdir(dirPath, function(err) {
       if (err) { def.reject(err) }
       else {
+        console.log('created dir: ' + dirPath);
+
+        console.log("trying to id image");
+        gm(options.file.path).identify(function(err, data) {
+          if (err) {
+            console.log('error identifying');
+            console.log(err);
+          }
+          console.log('data');
+          console.log(data);
+        });
 
         //convert to .png, drop into that folder
         var pngsPath = dirPath + '/' + basename + '.png';
+        console.log('trying to write to pngsPath: ' + pngsPath);
         gm(options.file.path).write(pngsPath, function(err) {
           if (err) { def.reject(err) }
           else {
