@@ -41,7 +41,7 @@ exports.handler = function(event, context) {
       return q.Promise(function(resolve, reject, notify) {
 
         proc.exec(
-          'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/bash-scrap /tmp/.; chmod 755 /tmp/bash-scrap',
+          'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/gif2mp4 /tmp/.; chmod 755 /tmp/gif2mp4',
           function (error, stdout, stderr) {
             if (error) {
               console.log('error setting up bins');
