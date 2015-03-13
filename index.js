@@ -82,21 +82,29 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
-      console.log('launching whatever script');
+      console.log('launching my baby-back script');
 
-      var child = proc.spawn(pathToBash, [options.gifPath], {stdio: 'inherit'});
+      var child = proc.spawn(pathToBash, [options.gifPath]);
       child.stdout.on('data', function (data) {
         console.log("stdout:\n" + data);
       });
       child.stderr.on('data', function (data) {
         console.log("stderr:\n" + data);
-        reject(data);
       });
-      child.on('close', function (code) {
-        console.log(code);
-        resolve();
-        context.done()
+      child.on('exit', function (code) {
+        if (code != 0) {
+          reject(new Error('spawn script err'));
+        } else {
+          resolve(options);
+        }
       });
+    });
+  });
+
+  promises.push(function(options) {
+    return q.Promise(function(resolve, reject) {
+      console.log('ready to upload');
+      context.done();
     });
   });
 

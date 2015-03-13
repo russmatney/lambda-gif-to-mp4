@@ -10,10 +10,11 @@ echo $CODE
 
 # break apart the gif into frames
 mkdir -p /tmp/working/$CODE
+echo `ls /tmp/`
 convert $1 /tmp/working/$CODE/$CODE.png
 
 # get the speed of the gif
-SPEED=`/usr/local/bin/identify -verbose $1`
+SPEED=`identify -verbose $1`
 CUTPOINT="Delay: "
 SPEED=${SPEED#*${CUTPOINT}*}
 SPEED=${SPEED:0:2}
