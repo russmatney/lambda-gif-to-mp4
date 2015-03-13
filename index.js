@@ -39,6 +39,7 @@ exports.handler = function(event, context) {
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
     promises.push(function() {
       return q.Promise(function(resolve, reject, notify) {
+        console.log('i cant believe it');
 
         proc.exec(
           'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/gif2mp4 /tmp/.; chmod 755 /tmp/gif2mp4',
@@ -61,7 +62,7 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
-      console.log('fetching from s3')
+      console.log('fetching yo sheeet from s3')
       console.log(options);
       options.gifPath = '/tmp/' + options.srcKey;
       var params = {Bucket: options.srcBucket, Key: options.srcKey};
@@ -102,7 +103,28 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
       console.log('ready to upload');
-      context.done();
+
+      options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4'
+      console.log('mp4Path: ' + options.mp4Path);
+
+      var stream = fs.createReadStream(options.mp4Path);
+      var params = {
+        Bucket: options.srcBucket + "-resized",
+        Key: path.basename(options.mp4Path),
+        Body: stream,
+        ContentType: mime.lookup(options.mp4Path)
+      };
+
+      s3.upload(params).send(function(err, data) {
+        if (err) {
+          reject(err)
+        } else {
+          console.log('successful conversion and upload');
+          resolve(options)
+          context.done();
+        }
+      });
+
     });
   });
 
