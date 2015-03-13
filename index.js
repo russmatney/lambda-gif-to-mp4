@@ -39,7 +39,7 @@ exports.handler = function(event, context) {
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
     promises.push(function() {
       return q.Promise(function(resolve, reject, notify) {
-        console.log('i cant believe it');
+        console.log('im starting to believe it again');
 
         proc.exec(
           'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/gif2mp4 /tmp/.; chmod 755 /tmp/gif2mp4',
@@ -101,31 +101,47 @@ exports.handler = function(event, context) {
   });
 
   promises.push(function(options) {
-    return q.Promise(function(resolve, reject) {
-      console.log('ready to upload');
+    var def = q.defer();
 
-      options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4'
-      console.log('mp4Path: ' + options.mp4Path);
+    console.log('ready to upload');
 
-      var stream = fs.createReadStream(options.mp4Path);
-      var params = {
-        Bucket: options.srcBucket + "-resized",
-        Key: path.basename(options.mp4Path),
-        Body: stream,
-        ContentType: mime.lookup(options.mp4Path)
-      };
+    options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4'
+    console.log('mp4Path: ' + options.mp4Path);
 
-      s3.upload(params).send(function(err, data) {
+    var stream = fs.createReadStream(options.mp4Path);
+    console.log('stream?');
+    var params = {
+      Bucket: options.srcBucket + "-resized",
+      Key: path.basename(options.mp4Path),
+      Body: stream,
+      ContentType: mime.lookup(options.mp4Path)
+    };
+    console.log('params?');
+
+    s3.upload(params)
+      .on('httpUploadProgress', function(evt) { console.log('upload progress: ' + evt ); } )
+      .send(function(err, data) {
+        console.log('send?');
         if (err) {
-          reject(err)
+          console.log('error');
+          def.reject(err)
         } else {
           console.log('successful conversion and upload');
-          resolve(options)
-          context.done();
+          def.resolve(options)
         }
       });
 
-    });
+    console.log('exit?');
+
+    return def.promise;
+  });
+
+  promises.push(function(options) {
+    var def = q.defer()
+    console.log('finished');
+    context.done()
+    def.resolve();
+    return def.promise;
   });
 
   promises.reduce(q.when, q())
