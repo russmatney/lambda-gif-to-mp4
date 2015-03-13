@@ -8,57 +8,11 @@ cd /tmp
 CODE=`basename $1 .gif`
 echo $CODE
 
-# break apart the gif into frames
-mkdir -p /tmp/working/$CODE
-echo `ls /tmp/`
-convert $1 /tmp/working/$CODE/$CODE.png
+ffmpeg -y -i $1 -c:v libx264 -pix_fmt yuv420p $CODE.mp4
 
-# get the speed of the gif
-SPEED=`identify -verbose $1`
-CUTPOINT="Delay: "
-SPEED=${SPEED#*${CUTPOINT}*}
-SPEED=${SPEED:0:2}
-SPEED=`expr 100 / $SPEED`
-echo "speed: " $SPEED
-
-cd /tmp/working/$CODE
-
-FRAMES=0
-
-# get the number of frames
-for i in *; do
-  FRAMES=`expr $FRAMES + 1`
-done
-echo "frames: " $FRAMES
-
-# rename for mp4 creation and create the files for it to loop five times
-# for (( j=0; j<=$FRAMES; j++ )); do
-for (( j=0; j<$FRAMES; j++ )); do
-  echo "j:" $j
-  k=`printf "%03d" $j`
-  l=`expr $j + $FRAMES`
-  l=`printf "%03d" $l`
-  m=`expr $j + $FRAMES + $FRAMES`
-  m=`printf "%03d" $m`
-  n=`expr $j + $FRAMES + $FRAMES + $FRAMES`
-  n=`printf "%03d" $n`
-  o=`expr $j + $FRAMES + $FRAMES + $FRAMES + $FRAMES`
-  o=`printf "%03d" $o`
-  convert $CODE-$j.png $CODE-$k.png
-  convert $CODE-$j.png $CODE-$l.png
-  convert $CODE-$j.png $CODE-$m.png
-  convert $CODE-$j.png $CODE-$n.png
-  convert $CODE-$j.png $CODE-$o.png
-done
-
-# make the gif into an mp4
-ffmpeg -y -r $SPEED -i $CODE-%03d.png -c:v libx264 -pix_fmt yuv420p $CODE.mp4
-
-mkdir -p /tmp/complete
-mv $CODE.mp4 /tmp/complete/$CODE.mp4
-
-cd /tmp
-
-rm -r /tmp/working/$CODE/
+for i in {1..4}; do printf "file '%s'\n" $CODE.mp4 >> list.txt; done
+ffmpeg -f concat -i list.txt -c copy $CODE-final.mp4
 
 rm $1
+rm $CODE.mp4
+rm list.txt

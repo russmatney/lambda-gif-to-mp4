@@ -63,7 +63,7 @@ var config = {
   region: 'us-east-1',
   handler: 'index.handler',
   role: 'arn:aws:iam::106586740595:role/executionrole',
-  functionName: 'runScript6',
+  functionName: 'runScript7',
   timeout: 60
 }
 

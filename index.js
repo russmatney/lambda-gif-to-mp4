@@ -47,7 +47,7 @@ exports.handler = function(event, context) {
               console.log('error setting up bins');
               reject(error)
             } else {
-              console.log("updated binaries");
+              console.log("updated binaris");
               resolve()
             }
           }
@@ -58,16 +58,15 @@ exports.handler = function(event, context) {
   }
 
   promises.push(handleS3Event(event))
+
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
       console.log('fetching from s3')
       console.log(options);
-
       options.gifPath = '/tmp/' + options.srcKey;
       var params = {Bucket: options.srcBucket, Key: options.srcKey};
       var file = require('fs').createWriteStream(options.gifPath);
       var s3Req = s3.getObject(params)
-
       s3Req.on('complete', function() {
         console.log('file writen to ' + options.gifPath);
         resolve(options);
@@ -75,7 +74,6 @@ exports.handler = function(event, context) {
       s3Req.on('error', function(err) {
         reject(err);
       });
-
       s3Req.createReadStream().pipe(file)
     })
   });
