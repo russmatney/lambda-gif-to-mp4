@@ -61,7 +61,7 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
       console.log('Pulling .gif from S3.');
-      options.gifPath = '/tmp/' + options.srcKey;
+      options.gifPath = '/tmp/' + path.basename(options.srcKey);
       var params = {Bucket: options.srcBucket, Key: options.srcKey};
       var file = require('fs').createWriteStream(options.gifPath);
       var s3Req = s3.getObject(params)
@@ -103,7 +103,7 @@ exports.handler = function(event, context) {
 
     var params = {
       Bucket: options.srcBucket,
-      Key: path.basename(options.mp4Path),
+      Key: path.dirname(options.srcKey) + "/" + path.basename(options.mp4Path),
       ContentType: mime.lookup(options.mp4Path)
     }
 
