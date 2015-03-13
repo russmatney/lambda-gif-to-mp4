@@ -63,8 +63,8 @@ var config = {
   region: 'us-east-1',
   handler: 'index.handler',
   role: 'arn:aws:iam::106586740595:role/executionrole',
-  functionName: 'wizardry-gif-2-mp4-INFURIATING',
-  timeout: 30
+  functionName: 'gif-to-mp4',
+  timeout: 45
 }
 
 //this func exits earlier than its process
