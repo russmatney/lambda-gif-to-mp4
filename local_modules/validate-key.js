@@ -3,6 +3,8 @@ q = require('q');
 module.exports = function(options) {
   return q.Promise(function(resolve, reject) {
 
+    console.log('validating key');
+
     function endsWith(string, suffixPattern) {
       return suffixPattern.test(string);
     }

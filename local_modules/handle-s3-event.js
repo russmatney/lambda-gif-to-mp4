@@ -3,6 +3,7 @@ q = require('q')
 module.exports = function(event) {
   var s3Event = event;
   return function() {
+    console.log('handling s3 event');
 
     var def = q.defer()
 
