@@ -39,16 +39,12 @@ exports.handler = function(event, context) {
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
     promises.push(function() {
       return q.Promise(function(resolve, reject, notify) {
-        console.log('im starting to believe it again');
-
         proc.exec(
           'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/gif2mp4 /tmp/.; chmod 755 /tmp/gif2mp4',
           function (error, stdout, stderr) {
             if (error) {
-              console.log('error setting up bins');
               reject(error)
             } else {
-              console.log("updated binaris");
               resolve()
             }
           }
@@ -62,14 +58,11 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
-      console.log('fetching yo sheeet from s3')
-      console.log(options);
       options.gifPath = '/tmp/' + options.srcKey;
       var params = {Bucket: options.srcBucket, Key: options.srcKey};
       var file = require('fs').createWriteStream(options.gifPath);
       var s3Req = s3.getObject(params)
       s3Req.on('complete', function() {
-        console.log('file writen to ' + options.gifPath);
         resolve(options);
       })
       s3Req.on('error', function(err) {
@@ -85,10 +78,8 @@ exports.handler = function(event, context) {
 
       var child = proc.spawn(pathToBash, [options.gifPath]);
       child.stdout.on('data', function (data) {
-        console.log("stdout:\n" + data);
       });
       child.stderr.on('data', function (data) {
-        console.log("stderr:\n" + data);
       });
       child.on('exit', function (code) {
         if (code != 0) {
@@ -102,26 +93,18 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     var def = q.defer();
-
-    console.log('ready to upload');
-
-    options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4'
-    console.log('mp4Path: ' + options.mp4Path);
+    options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4';
 
     var stream = fs.createReadStream(options.mp4Path);
-    console.log('stream?');
     var params = {
       Bucket: options.srcBucket + "-resized",
       Key: path.basename(options.mp4Path),
       Body: stream,
       ContentType: mime.lookup(options.mp4Path)
     };
-    console.log('params?');
 
     s3.upload(params)
-      .on('httpUploadProgress', function(evt) { console.log('upload progress: ' + evt ); } )
       .send(function(err, data) {
-        console.log('send?');
         if (err) {
           console.log('error');
           def.reject(err)
@@ -130,9 +113,6 @@ exports.handler = function(event, context) {
           def.resolve(options)
         }
       });
-
-    console.log('exit?');
-
     return def.promise;
   });
 
@@ -147,7 +127,6 @@ exports.handler = function(event, context) {
   promises.reduce(q.when, q())
     .fail(function(err){
       console.log('promise rejected with err');
-      console.log(err);
       context.done(err);
     });
 };

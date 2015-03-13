@@ -10,7 +10,7 @@ echo $CODE
 
 ffmpeg -y -i $1 -c:v libx264 -pix_fmt yuv420p $CODE.mp4
 
-for i in {1..4}; do printf "file '%s'\n" $CODE.mp4 >> list.txt; done
+for i in {1..5}; do printf "file '%s'\n" $CODE.mp4 >> list.txt; done
 ffmpeg -f concat -i list.txt -c copy $CODE-final.mp4
 
 rm $1
