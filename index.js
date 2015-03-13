@@ -100,11 +100,11 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     var def = q.defer();
     console.log('Ready for upload.');
-    options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '.mp4';
+    options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4';
 
     var params = {
       Bucket: options.srcBucket,
-      Key: path.dirname(options.srcKey) + "/" + path.basename(options.mp4Path),
+      Key: path.dirname(options.srcKey) + "/" + path.basename(options.srcKey, '.gif') + '.mp4',
       ContentType: mime.lookup(options.mp4Path)
     }
 
