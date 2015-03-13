@@ -9,10 +9,10 @@ echo `ls`
 CODE=`basename $1 .gif`
 echo $CODE
 
-ffmpeg -y -i $1 -c:v libx264 -pix_fmt yuv420p $CODE.mp4
+ffmpeg -y -i $1 -c:v libx264 -pix_fmt yuv420p $CODE-one-loop.mp4
 
-for i in {1..5}; do printf "file '%s'\n" $CODE.mp4 >> list.txt; done
-ffmpeg -y -f concat -i list.txt -map 0 -c copy $CODE-final.mp4
+for i in {1..5}; do printf "file '%s'\n" $CODE-one-loop.mp4 >> list.txt; done
+ffmpeg -y -f concat -i list.txt -map 0 -c copy $CODE.mp4
 
 rm $1
 rm $CODE.mp4
