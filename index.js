@@ -10,7 +10,7 @@ var mkdirp = require('mkdirp')
 
 var proc = require('child_process');
 
-process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT']
+process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'] + ':/tmp/'
 
 var tmpPrefix;
 var pathToBash;
