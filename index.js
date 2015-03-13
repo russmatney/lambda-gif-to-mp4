@@ -102,7 +102,7 @@ exports.handler = function(event, context) {
     options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '.mp4';
 
     var params = {
-      Bucket: options.srcBucket + "-resized",
+      Bucket: options.srcBucket,
       Key: path.basename(options.mp4Path),
       ContentType: mime.lookup(options.mp4Path)
     }
