@@ -39,6 +39,7 @@ exports.handler = function(event, context) {
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
     promises.push(function() {
       return q.Promise(function(resolve, reject, notify) {
+        console.log('manipulating binaries');
         proc.exec(
           'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/gif2mp4 /tmp/.; chmod 755 /tmp/gif2mp4',
           function (error, stdout, stderr) {
@@ -58,6 +59,7 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
+      console.log('pulling from s3');
       options.gifPath = '/tmp/' + options.srcKey;
       var params = {Bucket: options.srcBucket, Key: options.srcKey};
       var file = require('fs').createWriteStream(options.gifPath);
@@ -93,6 +95,7 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     var def = q.defer();
+    console.log('ready for upload');
     options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4';
 
     var stream = fs.createReadStream(options.mp4Path);
@@ -107,19 +110,19 @@ exports.handler = function(event, context) {
       .send(function(err, data) {
         if (err) {
           console.log('error');
-          def.reject(err)
+          def.reject(err);
         } else {
           console.log('successful conversion and upload');
-          def.resolve(options)
+          def.resolve(options);
         }
       });
     return def.promise;
   });
 
   promises.push(function(options) {
-    var def = q.defer()
+    var def = q.defer();
     console.log('finished');
-    context.done()
+    context.done();
     def.resolve();
     return def.promise;
   });
