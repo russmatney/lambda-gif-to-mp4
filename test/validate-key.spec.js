@@ -2,7 +2,7 @@ var expect = require('chai').expect;
 
 var validateKey = require('../local_modules/validate-key');
 
-describe.only('validateKey', function() {
+describe('validateKey', function() {
   it('should exist', function() {
     expect(validateKey).to.exist;
   });

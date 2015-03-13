@@ -39,4 +39,19 @@ describe('gif2mp4', function() {
     index.handler(event, context)
   })
 
+  it('should reject invalid keys', function(done) {
+    var event = require('./test-bad-input')
+    var context = {
+      done: function(err) {
+        if (err) {
+          done()
+        } else {
+          done(new Error('Error - should have failed with bad event data'))
+        }
+      }
+    }
+    index.handler(event, context)
+  })
+
+
 })
