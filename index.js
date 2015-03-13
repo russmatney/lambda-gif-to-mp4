@@ -84,7 +84,7 @@ exports.handler = function(event, context) {
     return q.Promise(function(resolve, reject) {
       console.log('launching whatever script');
 
-      var child = proc.spawn(pathToBash);
+      var child = proc.spawn(pathToBash, [options.gifPath], {stdio: 'inherit'});
       child.stdout.on('data', function (data) {
         console.log("stdout:\n" + data);
       });
