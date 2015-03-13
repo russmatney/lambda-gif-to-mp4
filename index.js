@@ -68,7 +68,7 @@ exports.handler = function(event, context) {
       var file = require('fs').createWriteStream(options.gifPath);
       var s3Req = s3.getObject(params)
 
-      s3Req.on('httpDone', function() {
+      s3Req.on('complete', function() {
         console.log('file writen to ' + options.gifPath);
         resolve(options);
       })
