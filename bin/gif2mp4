@@ -1,10 +1,10 @@
 #!/bin/bash
 
-echo "script running"
+echo "gif2mp4 script running"
 echo $1
-echo `ls /tmp/`
 
 cd /tmp
+echo `ls`
 
 CODE=`basename $1 .gif`
 echo $CODE
@@ -12,7 +12,7 @@ echo $CODE
 ffmpeg -y -i $1 -c:v libx264 -pix_fmt yuv420p $CODE.mp4
 
 for i in {1..5}; do printf "file '%s'\n" $CODE.mp4 >> list.txt; done
-ffmpeg -f concat -i list.txt -c copy $CODE-final.mp4
+ffmpeg -y -f concat -i list.txt -map 0 -c copy $CODE-final.mp4
 
 rm $1
 rm $CODE.mp4

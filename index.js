@@ -40,7 +40,7 @@ exports.handler = function(event, context) {
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
     promises.push(function() {
       return q.Promise(function(resolve, reject, notify) {
-        console.log('manipulating binaries');
+        console.log('Manipulating binaries.');
         proc.exec(
           'rm /tmp/*; cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/gif2mp4 /tmp/.; chmod 755 /tmp/gif2mp4;',
           function (error, stdout, stderr) {
@@ -60,7 +60,7 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
-      console.log('pulling from s3');
+      console.log('Pulling .gif from S3.');
       options.gifPath = '/tmp/' + options.srcKey;
       var params = {Bucket: options.srcBucket, Key: options.srcKey};
       var file = require('fs').createWriteStream(options.gifPath);
@@ -77,7 +77,7 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
-      console.log('launching my baby-back script');
+      console.log('Launching script.');
 
       var child = proc.spawn(pathToBash, [options.gifPath]);
       child.stdout.on('data', function (data) {
@@ -98,7 +98,7 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     var def = q.defer();
-    console.log('ready for upload');
+    console.log('Ready for upload.');
     options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4';
 
     var params = {
@@ -111,14 +111,13 @@ exports.handler = function(event, context) {
     var s3obj = new AWS.S3({params: params});
     s3obj.upload({Body: body})
       .on('httpUploadProgress', function(evt) {
-        console.log('upload progress: ' + (100 * evt.loaded / evt.total));
+        console.log('Upload progress: ' + (100 * evt.loaded / evt.total));
       })
       .send(function(err, data) {
         if (err) {
-          console.log('error');
           def.reject(err);
         } else {
-          console.log('successful conversion and upload');
+          console.log('Successful conversion and upload.');
           def.resolve(options);
         }
       });
@@ -127,7 +126,7 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     var def = q.defer();
-    console.log('finished');
+    console.log('Finished.');
     context.done();
     def.resolve();
     return def.promise;
@@ -135,7 +134,7 @@ exports.handler = function(event, context) {
 
   promises.reduce(q.when, q())
     .fail(function(err){
-      console.log('promise rejected with err');
+      console.log('Promise rejected with err:');
       context.done(err);
     });
 };
