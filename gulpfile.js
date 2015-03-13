@@ -64,8 +64,7 @@ var config = {
   handler: 'index.handler',
   role: 'arn:aws:iam::106586740595:role/executionrole',
   functionName: 'gif-to-mp4-bosco',
-  timeout: 45,
-  memorySize: 256
+  timeout: 45
 }
 
 //this func exits earlier than its process
