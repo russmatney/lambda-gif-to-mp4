@@ -16,7 +16,7 @@ echo "ls"
 echo `ls`
 
 for i in {1..5}; do printf "file '%s'\n" $CODE.mp4 >> list.txt; done
-ffmpeg -y -f concat -i list.txt -map 0 -c copy $CODE-final.mp4
+ffmpeg -y -f concat -i list.txt -c copy $CODE-final.mp4
 
 rm $1
 rm $CODE.mp4
