@@ -62,6 +62,7 @@ exports.handler = function(event, context) {
     return q.Promise(function(resolve, reject) {
       console.log('Pulling .gif from S3.');
       options.gifPath = '/tmp/' + path.basename(options.srcKey);
+      console.log('the gifPath is: ' + options.gifPath);
       var params = {Bucket: options.srcBucket, Key: options.srcKey};
       var file = require('fs').createWriteStream(options.gifPath);
       var s3Req = s3.getObject(params)
