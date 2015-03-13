@@ -2,6 +2,7 @@
 
 echo "script running"
 echo $1
+echo `ls /tmp/`
 
 cd /tmp
 
