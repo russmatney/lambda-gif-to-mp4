@@ -14,11 +14,13 @@ describe('gif2mp4', function() {
   it('should call context.done() after running smoothly', function(done) {
     var event = require('./test-input')
     var context = {
-      done: function(err) {
+      done: function(err, message) {
         if (err) {
-          done(err)
+          done(err);
+        } else if (message) {
+          done(message);
         } else {
-          done()
+          done();
         }
       }
     }
@@ -28,8 +30,10 @@ describe('gif2mp4', function() {
   it('should call context.done(err) when errors pop up', function(done) {
     var event = {}
     var context = {
-      done: function(err) {
+      done: function(err, message) {
         if (err) {
+          done()
+        } else if(message) {
           done()
         } else {
           done(new Error('Error - should have failed with bad event data'))
@@ -42,16 +46,17 @@ describe('gif2mp4', function() {
   it('should reject invalid keys', function(done) {
     var event = require('./test-bad-input')
     var context = {
-      done: function(err) {
+      done: function(err, message) {
         if (err) {
-          done()
+          done(err);
+        } else if (message) {
+          done();
         } else {
-          done(new Error('Error - should have failed with bad event data'))
+          done(new Error('Error - should have failed with bad event data'));
         }
       }
     }
     index.handler(event, context)
   })
-
 
 })

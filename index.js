@@ -16,17 +16,20 @@ process.env['PATH'] = process.env['PATH'] + ':/tmp/:' + process.env['LAMBDA_TASK
 var tmpPrefix;
 var pathToBash;
 var handleS3Event;
+var validateKey;
 
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
   tmpPrefix = '/tmp/';
   pathToBash = '/tmp/gif2mp4';
   handleS3Event = require('handle-s3-event');
+  validateKey = require('validate-key');
 } else {
   //local
   tmpPrefix = './';
   pathToBash = './bin/gif2mp4';
   handleS3Event = require('./local_modules/handle-s3-event');
+  validateKey = require('./local_modules/validate-key');
 }
 
 var s3 = new AWS.S3();
@@ -36,6 +39,9 @@ exports.handler = function(event, context) {
   process.env['FFPROBE_PATH'] = '/tmp/ffprobe';
 
   var promises = [];
+
+  promises.push(handleS3Event(event))
+  promises.push(validateKey);
 
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
     promises.push(function() {
@@ -52,11 +58,8 @@ exports.handler = function(event, context) {
           }
         )
       });
-
     })
   }
-
-  promises.push(handleS3Event(event))
 
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
@@ -79,7 +82,6 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
       console.log('Launching script.');
-
       var child = proc.spawn(pathToBash, [options.gifPath]);
       child.stdout.on('data', function (data) {
         console.log("stdout: " + data);
@@ -136,6 +138,7 @@ exports.handler = function(event, context) {
   promises.reduce(q.when, q())
     .fail(function(err){
       console.log('Promise rejected with err:');
-      context.done(err);
+      //doesn't try again for now, need to isolate errors from invalid keys
+      context.done(null, err);
     });
 };
