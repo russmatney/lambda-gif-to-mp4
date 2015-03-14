@@ -128,6 +128,22 @@ exports.handler = function(event, context) {
   });
 
   promises.push(function(options) {
+    return q.Promise(function(resolve, reject, notify) {
+      console.log('Deleting uploaded mp4: ' + options.mp4Path);
+      proc.exec(
+        'rm ' + options.mp4Path,
+        function (error, stdout, stderr) {
+          if (error) {
+            reject(error)
+          } else {
+            resolve(options)
+          }
+        }
+      )
+    });
+  });
+
+  promises.push(function(options) {
     var def = q.defer();
     console.log('Finished.');
     context.done();
@@ -138,6 +154,7 @@ exports.handler = function(event, context) {
   promises.reduce(q.when, q())
     .fail(function(err){
       console.log('Promise rejected with err:');
+      conosle.log(err);
       //doesn't try again for now, need to isolate errors from invalid keys
       context.done(null, err);
     });
