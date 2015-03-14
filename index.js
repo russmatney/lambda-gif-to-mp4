@@ -44,7 +44,7 @@ exports.handler = function(event, context) {
   promises.push(validateKey);
 
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
-    promises.push(function() {
+    promises.push(function(options) {
       return q.Promise(function(resolve, reject, notify) {
         console.log('Manipulating binaries.');
         proc.exec(
@@ -53,7 +53,7 @@ exports.handler = function(event, context) {
             if (error) {
               reject(error)
             } else {
-              resolve()
+              resolve(options)
             }
           }
         )
