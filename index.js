@@ -82,20 +82,26 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
       console.log('Launching script.');
-      var child = proc.spawn(pathToBash, [options.gifPath]);
-      child.stdout.on('data', function (data) {
-        console.log("stdout: " + data);
-      });
-      child.stderr.on('data', function (data) {
-        console.log("stderr: " + data);
-      });
-      child.on('exit', function (code) {
-        if (code != 0) {
-          reject(new Error('spawn script err'));
-        } else {
-          resolve(options);
-        }
-      });
+
+      //wait 5 seconds for stream, or some bullshit
+      setTimeout(function() {
+        var child = proc.spawn(pathToBash, [options.gifPath]);
+
+        child.stdout.on('data', function (data) {
+          console.log("stdout: " + data);
+        });
+        child.stderr.on('data', function (data) {
+          console.log("stderr: " + data);
+        });
+        child.on('exit', function (code) {
+          if (code != 0) {
+            reject(new Error('spawn script err'));
+          } else {
+            resolve(options);
+          }
+        });
+
+      }, 5000);
     });
   });
 
@@ -154,7 +160,7 @@ exports.handler = function(event, context) {
   promises.reduce(q.when, q())
     .fail(function(err){
       console.log('Promise rejected with err:');
-      conosle.log(err);
+      console.log(err);
       //doesn't try again for now, need to isolate errors from invalid keys
       context.done(null, err);
     });
