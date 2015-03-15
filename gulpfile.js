@@ -17,11 +17,6 @@ gulp.task('js', function() {
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('local-modules', function() {
-  return gulp.src(['local_modules/*.js'])
-    .pipe(gulp.dest('dist/node_modules/'));
-});
-
 gulp.task('copy-binaries', function() {
   return gulp.src('./bin/*')
     .pipe(gulp.dest('dist/'));
@@ -42,7 +37,7 @@ gulp.task('zip-it-up', function() {
 gulp.task('zip', function(callback) {
   return runSequence(
     ['clean'],
-    ['js', 'copy-binaries', 'package-npm-mods', 'local-modules'],
+    ['js', 'copy-binaries', 'package-npm-mods'],
     ['zip-it-up'],
     callback
   );

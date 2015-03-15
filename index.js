@@ -1,15 +1,10 @@
 var AWS = require('aws-sdk');
 var q = require('q');
-var fs = require('fs');
 var path = require('path');
 var mime = require('mime');
-var zlib = require('zlib');
-
-var proc = require('child_process');
 
 process.env['PATH'] = process.env['PATH'] + ':/tmp/:' + process.env['LAMBDA_TASK_ROOT']
 
-var tmpPrefix;
 var pathToBash;
 var transformS3Event = require('lambduh-transform-s3-event');
 var validate = require('lambduh-validate');
@@ -17,11 +12,9 @@ var execute = require('lambduh-execute');
 
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
-  tmpPrefix = '/tmp/';
   pathToBash = '/tmp/gif2mp4';
 } else {
   //local
-  tmpPrefix = './';
   pathToBash = './bin/gif2mp4';
 }
 
@@ -72,7 +65,7 @@ exports.handler = function(event, context) {
 
       //wait 5 seconds for stream, or some bullshit
       setTimeout(function() {
-        var child = proc.spawn(pathToBash, [options.gifPath]);
+        var child = require('child_process').spawn(pathToBash, [options.gifPath]);
 
         child.stdout.on('data', function (data) {
           console.log("stdout: " + data);
@@ -103,7 +96,7 @@ exports.handler = function(event, context) {
       ContentType: mime.lookup(options.mp4Path)
     }
 
-    var body = fs.createReadStream(options.mp4Path)
+    var body = require('fs').createReadStream(options.mp4Path)
     var s3obj = new AWS.S3({params: params});
     s3obj.upload({Body: body})
       .on('httpUploadProgress', function(evt) {
