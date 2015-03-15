@@ -13,19 +13,17 @@ process.env['PATH'] = process.env['PATH'] + ':/tmp/:' + process.env['LAMBDA_TASK
 
 var tmpPrefix;
 var pathToBash;
-var transformS3Event = require('transform-s3-event');
-var validateKey;
+var transformS3Event = require('lambduh-transform-s3-event');
+var validate = require('lambduh-validate');
 
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
   tmpPrefix = '/tmp/';
   pathToBash = '/tmp/gif2mp4';
-  validateKey = require('validate-key');
 } else {
   //local
   tmpPrefix = './';
   pathToBash = './bin/gif2mp4';
-  validateKey = require('./local_modules/validate-key');
 }
 
 var s3 = new AWS.S3();
@@ -36,8 +34,14 @@ exports.handler = function(event, context) {
 
   var promises = [];
 
-  promises.push(transformS3Event(event)())
-  promises.push(validateKey);
+  promises.push(transformS3Event(event))
+  promises.push(validate({
+    "srcKey": {
+      endsWith: "\\.gif",
+      endsWithout: "_\\d+\\.gif",
+      startsWith: "events/"
+    }
+  }));
 
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
     promises.push(function(options) {
