@@ -1,10 +1,8 @@
 var AWS = require('aws-sdk');
-var ffmpeg = require('fluent-ffmpeg');
 var q = require('q');
 var fs = require('fs');
 var path = require('path');
 var mime = require('mime');
-var mkdirp = require('mkdirp');
 var zlib = require('zlib');
 
 var proc = require('child_process');
@@ -29,9 +27,6 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
 var s3 = new AWS.S3();
 
 exports.handler = function(event, context) {
-  process.env['FFMPEG_PATH'] = '/tmp/ffmpeg';
-  process.env['FFPROBE_PATH'] = '/tmp/ffprobe';
-
   var promises = [];
 
   promises.push(transformS3Event(event))
