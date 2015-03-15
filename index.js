@@ -13,6 +13,7 @@ var tmpPrefix;
 var pathToBash;
 var transformS3Event = require('lambduh-transform-s3-event');
 var validate = require('lambduh-validate');
+var execute = require('lambduh-execute');
 
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
@@ -39,21 +40,12 @@ exports.handler = function(event, context) {
   }));
 
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
-    promises.push(function(options) {
-      return q.Promise(function(resolve, reject, notify) {
-        console.log('Manipulating binaries.');
-        proc.exec(
-          'rm /tmp/*; cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg; cp /var/task/gif2mp4 /tmp/.; chmod 755 /tmp/gif2mp4;',
-          function (error, stdout, stderr) {
-            if (error) {
-              reject(error)
-            } else {
-              resolve(options)
-            }
-          }
-        )
-      });
-    })
+    promises.push(execute({
+      shell: 'cp /var/task/ffmpeg /tmp/.; chmod 755 /tmp/ffmpeg;'
+    }));
+    promises.push(execute({
+      shell: 'cp /var/task/gif2mp4 /tmp/.; chmod 755 /tmp/gif2mp4;'
+    }));
   }
 
   promises.push(function(options) {
@@ -129,19 +121,9 @@ exports.handler = function(event, context) {
   });
 
   promises.push(function(options) {
-    return q.Promise(function(resolve, reject, notify) {
-      console.log('Deleting uploaded mp4: ' + options.mp4Path);
-      proc.exec(
-        'rm ' + options.mp4Path,
-        function (error, stdout, stderr) {
-          if (error) {
-            reject(error)
-          } else {
-            resolve(options)
-          }
-        }
-      )
-    });
+    return execute({
+      shell: "rm " + options.mp4Path;
+    })(options);
   });
 
   promises.push(function(options) {

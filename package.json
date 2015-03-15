@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.1.16",
+    "lambduh-execute": "^1.0.0",
     "lambduh-transform-s3-event": "^1.0.0",
     "lambduh-validate": "^1.0.0",
     "mime": "^1.3.4",
