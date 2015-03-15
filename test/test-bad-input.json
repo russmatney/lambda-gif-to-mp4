@@ -12,7 +12,7 @@
           "arn": "arn:aws:s3:::russbosco"
         },
         "object": {
-          "key": "events/partyintheusa/jeff-is-gold-blum.gif",
+          "key": "jeff-is-gold-blum.gif",
           "size": 1024,
           "eTag": "d41d8cd98f00b204e9800998ecf8427e"
         }
