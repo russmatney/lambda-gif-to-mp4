@@ -4,8 +4,6 @@ var q = require('q');
 var fs = require('fs');
 var path = require('path');
 var mime = require('mime');
-var gm = require('gm')
-          .subClass({imageMagick: true});
 var mkdirp = require('mkdirp');
 var zlib = require('zlib');
 
