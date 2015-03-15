@@ -122,7 +122,7 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     return execute({
-      shell: "rm " + options.mp4Path;
+      shell: "rm " + options.mp4Path
     })(options);
   });
 
