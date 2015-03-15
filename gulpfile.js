@@ -63,7 +63,7 @@ var config = {
   region: 'us-east-1',
   handler: 'index.handler',
   role: 'arn:aws:iam::106586740595:role/executionrole',
-  functionName: 'gif-to-mp4-russbosco-9',
+  functionName: 'gif-to-mp4-russbosco-99',
   timeout: 60
 }
 
