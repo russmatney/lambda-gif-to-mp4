@@ -13,20 +13,18 @@ process.env['PATH'] = process.env['PATH'] + ':/tmp/:' + process.env['LAMBDA_TASK
 
 var tmpPrefix;
 var pathToBash;
-var handleS3Event;
+var transformS3Event = require('transform-s3-event');
 var validateKey;
 
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
   tmpPrefix = '/tmp/';
   pathToBash = '/tmp/gif2mp4';
-  handleS3Event = require('handle-s3-event');
   validateKey = require('validate-key');
 } else {
   //local
   tmpPrefix = './';
   pathToBash = './bin/gif2mp4';
-  handleS3Event = require('./local_modules/handle-s3-event');
   validateKey = require('./local_modules/validate-key');
 }
 
@@ -38,7 +36,7 @@ exports.handler = function(event, context) {
 
   var promises = [];
 
-  promises.push(handleS3Event(event))
+  promises.push(transformS3Event(event)())
   promises.push(validateKey);
 
   if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
