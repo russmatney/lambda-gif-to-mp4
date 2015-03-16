@@ -2,14 +2,13 @@ var AWS = require('aws-sdk');
 var q = require('q');
 var path = require('path');
 var mime = require('mime');
-
-process.env['PATH'] = process.env['PATH'] + ':/tmp/:' + process.env['LAMBDA_TASK_ROOT']
-
-var pathToBash;
 var transformS3Event = require('lambduh-transform-s3-event');
 var validate = require('lambduh-validate');
 var execute = require('lambduh-execute');
 
+process.env['PATH'] = process.env['PATH'] + ':/tmp/:' + process.env['LAMBDA_TASK_ROOT']
+
+var pathToBash;
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
   pathToBash = '/tmp/gif2mp4';
