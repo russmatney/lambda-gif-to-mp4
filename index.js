@@ -42,9 +42,8 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     return q.Promise(function(resolve, reject) {
-      console.log('Pulling .gif from S3.');
+      console.log('Pulling .gif from S3: ' + options.srcKey);
       options.gifPath = '/tmp/' + path.basename(options.srcKey);
-      console.log('the gifPath is: ' + options.gifPath);
       var params = {Bucket: options.srcBucket, Key: options.srcKey};
       var file = require('fs').createWriteStream(options.gifPath);
       var s3Req = s3.getObject(params)
@@ -65,7 +64,6 @@ exports.handler = function(event, context) {
       //wait 5 seconds for stream, or some bullshit
       setTimeout(function() {
         var child = require('child_process').spawn(pathToBash, [options.gifPath]);
-
         child.stdout.on('data', function (data) {
           console.log("stdout: " + data);
         });
@@ -79,7 +77,6 @@ exports.handler = function(event, context) {
             resolve(options);
           }
         });
-
       }, 5000);
     });
   });
@@ -130,7 +127,7 @@ exports.handler = function(event, context) {
     .fail(function(err){
       console.log('Promise rejected with err:');
       console.log(err);
-      //doesn't try again for now, need to isolate errors from invalid keys
       context.done(null, err);
     });
 };
+
