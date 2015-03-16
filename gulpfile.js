@@ -53,18 +53,18 @@ gulp.task('zipload', function(callback) {
 });
 
 gulp.task('upload', function(callback) {
-  env({ file: "lambda-config.js" });
+  var config = require("./lambda-config.js");
 
-  AWS.config.region = process.env.region;
+  AWS.config.region = config.region;
   var lambda = new AWS.Lambda();
 
   var params = {
-    FunctionName: process.env.functionName,
-    Handler: process.env.handler,
+    FunctionName: config.functionName,
+    Handler: config.handler,
     Mode: "event",
-    Role: process.env.role,
+    Role: config.role,
     Runtime: "nodejs",
-    Timeout: process.env.timeout
+    Timeout: config.timeout
   };
 
   return fs.readFile('./dist.zip', function(err, data) {
