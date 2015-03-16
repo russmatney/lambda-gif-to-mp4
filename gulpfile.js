@@ -18,12 +18,12 @@ gulp.task('js', function() {
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('copy-binaries', function() {
+gulp.task('bin', function() {
   return gulp.src('./bin/*')
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('package-npm-mods', function() {
+gulp.task('node-mods', function() {
   return gulp.src('./package.json')
     .pipe(gulp.dest('dist/'))
     .pipe(install({production: true}));
@@ -38,7 +38,7 @@ gulp.task('zip', function() {
 gulp.task('lambda-zip', function(callback) {
   return runSequence(
     ['clean'],
-    ['js', 'copy-binaries', 'package-npm-mods'],
+    ['js', 'bin', 'node-mods'],
     ['zip'],
     callback
   );
