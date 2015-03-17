@@ -1,7 +1,5 @@
-var AWS = require('aws-sdk');
-var q = require('q');
+var Q = require('q');
 var path = require('path');
-var mime = require('mime');
 var transformS3Event = require('lambduh-transform-s3-event');
 var validate = require('lambduh-validate');
 var execute = require('lambduh-execute');
@@ -18,8 +16,6 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //local
   pathToBash = './bin/gif2mp4';
 }
-
-var s3 = new AWS.S3();
 
 exports.handler = function(event, context) {
   var promises = [];
@@ -51,8 +47,8 @@ exports.handler = function(event, context) {
 
   promises.push(function(options) {
     //wait 5 seconds for stream, or some bullshit
-    var def = q.defer();
-    q.delay(5000).done(function() {
+    var def = Q.defer();
+    Q.delay(5000).done(function() {
       return def.resolve(execute({
         bashScript: pathToBash,
         bashParams: [options.downloadFilepath]
@@ -75,14 +71,14 @@ exports.handler = function(event, context) {
   });
 
   promises.push(function(options) {
-    var def = q.defer();
+    var def = Q.defer();
     console.log('Finished.');
     context.done();
     def.resolve();
     return def.promise;
   });
 
-  promises.reduce(q.when, q())
+  promises.reduce(Q.when, Q())
     .fail(function(err){
       console.log('Promise rejected with err:');
       console.log(err);
