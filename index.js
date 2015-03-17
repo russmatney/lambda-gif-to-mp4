@@ -74,36 +74,15 @@ exports.handler = function(event, context) {
   });
 
   promises.push(function(options) {
-    var def = q.defer();
-    console.log('Ready for upload.');
-    options.mp4Path = '/tmp/' + path.basename(options.downloadFilepath, '.gif') + '-final.mp4';
-
-    var params = {
-      Bucket: options.srcBucket,
-      Key: path.dirname(options.srcKey) + "/" + path.basename(options.srcKey, '.gif') + '.mp4',
-      ContentType: mime.lookup(options.mp4Path)
-    }
-
-    var body = require('fs').createReadStream(options.mp4Path)
-    var s3obj = new AWS.S3({params: params});
-    s3obj.upload({Body: body})
-      .on('httpUploadProgress', function(evt) {
-        console.log('Upload progress: ' + (100 * evt.loaded / evt.total));
-      })
-      .send(function(err, data) {
-        if (err) {
-          def.reject(err);
-        } else {
-          console.log('Successful conversion and upload.');
-          def.resolve(options);
-        }
-      });
-    return def.promise;
+    options.dstBucket = options.srcBucket;
+    options.dstKey = path.dirname(options.srcKey) + "/" + path.basename(options.srcKey, '.gif') + '.mp4';
+    options.uploadFilepath = '/tmp/' + path.basename(options.downloadFilepath, '.gif') + '-final.mp4';
+    return upload()(options);
   });
 
   promises.push(function(options) {
     return execute({
-      shell: "rm " + options.mp4Path
+      shell: "rm " + options.uploadFilepath
     })(options);
   });
 
