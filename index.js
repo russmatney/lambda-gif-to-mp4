@@ -50,27 +50,15 @@ exports.handler = function(event, context) {
   });
 
   promises.push(function(options) {
-    return q.Promise(function(resolve, reject) {
-      console.log('Launching script.');
-
-      //wait 5 seconds for stream, or some bullshit
-      setTimeout(function() {
-        var child = require('child_process').spawn(pathToBash, [options.downloadFilepath]);
-        child.stdout.on('data', function (data) {
-          console.log("stdout: " + data);
-        });
-        child.stderr.on('data', function (data) {
-          console.log("stderr: " + data);
-        });
-        child.on('exit', function (code) {
-          if (code != 0) {
-            reject(new Error('spawn script err'));
-          } else {
-            resolve(options);
-          }
-        });
-      }, 5000);
+    //wait 5 seconds for stream, or some bullshit
+    var def = q.defer();
+    q.delay(5000).done(function() {
+      return def.resolve(execute({
+        bashScript: pathToBash,
+        bashParams: [options.downloadFilepath]
+      })(options));
     });
+    return def.promise;
   });
 
   promises.push(function(options) {
