@@ -1,10 +1,10 @@
-var AWS = require('aws-sdk');
-var q = require('q');
+var Q = require('q');
 var path = require('path');
-var mime = require('mime');
 var transformS3Event = require('lambduh-transform-s3-event');
 var validate = require('lambduh-validate');
 var execute = require('lambduh-execute');
+var download = require('lambduh-get-s3-object');
+var upload = require('lambduh-put-s3-object');
 
 process.env['PATH'] = process.env['PATH'] + ':/tmp/:' + process.env['LAMBDA_TASK_ROOT']
 
@@ -16,8 +16,6 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //local
   pathToBash = './bin/gif2mp4';
 }
-
-var s3 = new AWS.S3();
 
 exports.handler = function(event, context) {
   var promises = [];
@@ -41,89 +39,46 @@ exports.handler = function(event, context) {
   }
 
   promises.push(function(options) {
-    return q.Promise(function(resolve, reject) {
-      console.log('Pulling .gif from S3: ' + options.srcKey);
-      options.gifPath = '/tmp/' + path.basename(options.srcKey);
-      var params = {Bucket: options.srcBucket, Key: options.srcKey};
-      var file = require('fs').createWriteStream(options.gifPath);
-      var s3Req = s3.getObject(params)
-      s3Req.on('complete', function() {
-        resolve(options);
-      })
-      s3Req.on('error', function(err) {
-        reject(err);
-      });
-      s3Req.createReadStream().pipe(file)
-    })
+    //baked assumption: options has srcKey and srcBucket
+    console.log('Pulling .gif from S3: ' + options.srcKey);
+    options.downloadFilepath = '/tmp/' + path.basename(options.srcKey);
+    return download()(options);
   });
 
   promises.push(function(options) {
-    return q.Promise(function(resolve, reject) {
-      console.log('Launching script.');
-
-      //wait 5 seconds for stream, or some bullshit
-      setTimeout(function() {
-        var child = require('child_process').spawn(pathToBash, [options.gifPath]);
-        child.stdout.on('data', function (data) {
-          console.log("stdout: " + data);
-        });
-        child.stderr.on('data', function (data) {
-          console.log("stderr: " + data);
-        });
-        child.on('exit', function (code) {
-          if (code != 0) {
-            reject(new Error('spawn script err'));
-          } else {
-            resolve(options);
-          }
-        });
-      }, 5000);
+    //wait 5 seconds for stream, or some bullshit
+    var def = Q.defer();
+    Q.delay(5000).done(function() {
+      return def.resolve(execute({
+        bashScript: pathToBash,
+        bashParams: [options.downloadFilepath]
+      })(options));
     });
-  });
-
-  promises.push(function(options) {
-    var def = q.defer();
-    console.log('Ready for upload.');
-    options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4';
-
-    var params = {
-      Bucket: options.srcBucket,
-      Key: path.dirname(options.srcKey) + "/" + path.basename(options.srcKey, '.gif') + '.mp4',
-      ContentType: mime.lookup(options.mp4Path)
-    }
-
-    var body = require('fs').createReadStream(options.mp4Path)
-    var s3obj = new AWS.S3({params: params});
-    s3obj.upload({Body: body})
-      .on('httpUploadProgress', function(evt) {
-        console.log('Upload progress: ' + (100 * evt.loaded / evt.total));
-      })
-      .send(function(err, data) {
-        if (err) {
-          def.reject(err);
-        } else {
-          console.log('Successful conversion and upload.');
-          def.resolve(options);
-        }
-      });
     return def.promise;
   });
 
   promises.push(function(options) {
+    options.dstBucket = options.srcBucket;
+    options.dstKey = path.dirname(options.srcKey) + "/" + path.basename(options.srcKey, '.gif') + '.mp4';
+    options.uploadFilepath = '/tmp/' + path.basename(options.downloadFilepath, '.gif') + '-final.mp4';
+    return upload()(options);
+  });
+
+  promises.push(function(options) {
     return execute({
-      shell: "rm " + options.mp4Path
+      shell: "rm " + options.uploadFilepath
     })(options);
   });
 
   promises.push(function(options) {
-    var def = q.defer();
+    var def = Q.defer();
     console.log('Finished.');
     context.done();
     def.resolve();
     return def.promise;
   });
 
-  promises.reduce(q.when, q())
+  promises.reduce(Q.when, Q())
     .fail(function(err){
       console.log('Promise rejected with err:');
       console.log(err);
