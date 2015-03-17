@@ -46,8 +46,6 @@ exports.handler = function(event, context) {
     //baked assumption: options has srcKey and srcBucket
     console.log('Pulling .gif from S3: ' + options.srcKey);
     options.downloadFilepath = '/tmp/' + path.basename(options.srcKey);
-
-    //not ideal, resolves premature script running issue for now
     return setTimeout(function() {
       return download()(options);
     }, 5000);
@@ -57,21 +55,23 @@ exports.handler = function(event, context) {
     return q.Promise(function(resolve, reject) {
       console.log('Launching script.');
 
-      var child = require('child_process').spawn(pathToBash, [options.downloadFilepath]);
-      child.stdout.on('data', function (data) {
-        console.log("stdout: " + data);
-      });
-      child.stderr.on('data', function (data) {
-        console.log("stderr: " + data);
-      });
-      child.on('exit', function (code) {
-        if (code != 0) {
-          reject(new Error('spawn script err'));
-        } else {
-          resolve(options);
-        }
-      });
-
+      //wait 5 seconds for stream, or some bullshit
+      setTimeout(function() {
+        var child = require('child_process').spawn(pathToBash, [options.downloadFilepath]);
+        child.stdout.on('data', function (data) {
+          console.log("stdout: " + data);
+        });
+        child.stderr.on('data', function (data) {
+          console.log("stderr: " + data);
+        });
+        child.on('exit', function (code) {
+          if (code != 0) {
+            reject(new Error('spawn script err'));
+          } else {
+            resolve(options);
+          }
+        });
+      }, 5000);
     });
   });
 
