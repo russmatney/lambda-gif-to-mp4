@@ -5,6 +5,8 @@ var mime = require('mime');
 var transformS3Event = require('lambduh-transform-s3-event');
 var validate = require('lambduh-validate');
 var execute = require('lambduh-execute');
+var download = require('lambduh-get-s3-object');
+var upload = require('lambduh-put-s3-object');
 
 process.env['PATH'] = process.env['PATH'] + ':/tmp/:' + process.env['LAMBDA_TASK_ROOT']
 
@@ -41,20 +43,10 @@ exports.handler = function(event, context) {
   }
 
   promises.push(function(options) {
-    return q.Promise(function(resolve, reject) {
-      console.log('Pulling .gif from S3: ' + options.srcKey);
-      options.gifPath = '/tmp/' + path.basename(options.srcKey);
-      var params = {Bucket: options.srcBucket, Key: options.srcKey};
-      var file = require('fs').createWriteStream(options.gifPath);
-      var s3Req = s3.getObject(params)
-      s3Req.on('complete', function() {
-        resolve(options);
-      })
-      s3Req.on('error', function(err) {
-        reject(err);
-      });
-      s3Req.createReadStream().pipe(file)
-    })
+    //baked assumption: options has srcKey and srcBucket
+    console.log('Pulling .gif from S3: ' + options.srcKey);
+    options.downloadFilepath = '/tmp/' + path.basename(options.srcKey);
+    return download()(options);
   });
 
   promises.push(function(options) {
@@ -63,7 +55,7 @@ exports.handler = function(event, context) {
 
       //wait 5 seconds for stream, or some bullshit
       setTimeout(function() {
-        var child = require('child_process').spawn(pathToBash, [options.gifPath]);
+        var child = require('child_process').spawn(pathToBash, [options.downloadFilepath]);
         child.stdout.on('data', function (data) {
           console.log("stdout: " + data);
         });
@@ -84,7 +76,7 @@ exports.handler = function(event, context) {
   promises.push(function(options) {
     var def = q.defer();
     console.log('Ready for upload.');
-    options.mp4Path = '/tmp/' + path.basename(options.gifPath, '.gif') + '-final.mp4';
+    options.mp4Path = '/tmp/' + path.basename(options.downloadFilepath, '.gif') + '-final.mp4';
 
     var params = {
       Bucket: options.srcBucket,

@@ -7,7 +7,6 @@ var runSequence = require('run-sequence');
 var AWS = require('aws-sdk');
 var fs = require('fs');
 var mocha = require('gulp-mocha');
-var env = require('gulp-env');
 
 gulp.task('clean', function(cb) {
   del(['./dist', './dist.zip'], cb);
