@@ -46,9 +46,7 @@ exports.handler = function(event, context) {
     //baked assumption: options has srcKey and srcBucket
     console.log('Pulling .gif from S3: ' + options.srcKey);
     options.downloadFilepath = '/tmp/' + path.basename(options.srcKey);
-    return setTimeout(function() {
-      return download()(options);
-    }, 5000);
+    return download()(options);
   });
 
   promises.push(function(options) {
