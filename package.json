@@ -21,11 +21,11 @@
     "run-sequence": "^1.0.2"
   },
   "dependencies": {
-    "lambduh-execute": "^1.1.0",
-    "lambduh-get-s3-object": "^0.1.0",
-    "lambduh-put-s3-object": "^0.1.0",
-    "lambduh-transform-s3-event": "^1.0.0",
-    "lambduh-validate": "^1.0.1",
+    "lambduh-execute": "git://github.com/lambduh/lambduh-execute.git#result-flow-refactor",
+    "lambduh-get-s3-object": "git://github.com/lambduh/lambduh-get-s3-object.git#result-flow-refactor",
+    "lambduh-put-s3-object": "git://github.com/lambduh/lambduh-put-s3-object.git#result-flow-refactor",
+    "lambduh-transform-s3-event": "git://github.com/lambduh/lambduh-transform-s3-event.git#result-flow-refactor",
+    "lambduh-validate": "git://github.com/lambduh/lambduh-validate.git#result-flow-refactor",
     "q": "^1.2.0"
   }
 }

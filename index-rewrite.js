@@ -19,10 +19,11 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
 
 exports.handler = function(event, context) {
 
+  var result = {};
   Q.all([
     function() {
       console.log('Transforming S3 event');
-      transformS3Event(result, event)
+      return transformS3Event(result, event)
         .then(function(result) {
           //TODO: re-write: take object then options, return result
           //need to resolve 'result' somehow. perhaps it's the first param
