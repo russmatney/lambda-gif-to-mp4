@@ -43,7 +43,17 @@ exports.handler = function(event, context) {
             srcKey: result.srcKey,
             srcBucket: result.srcBucket,
             downloadFilepath: '/tmp/' + path.basename(result.srcKey)
-          });
+          })
+        })
+
+        .then(function(result) {
+          var def = Q.defer();
+          var timeout = 500;
+          setTimeout(function(){
+            console.log('' + timeout + ' milliseconds later....');
+            def.resolve(result);
+          }, timeout)
+          return def.promise;
         })
 
     }(), function(result) {
