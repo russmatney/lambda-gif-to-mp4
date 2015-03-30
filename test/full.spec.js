@@ -1,4 +1,4 @@
-var index = require('../index-rewrite')
+var index = require('../index')
 
 var expect = require('chai').expect
 
