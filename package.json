@@ -21,8 +21,8 @@
     "run-sequence": "^1.0.2"
   },
   "dependencies": {
-    "lambduh-execute": "1.2.0",
-    "lambduh-get-s3-object": "1.0.0",
+    "lambduh-execute": "1.3.0",
+    "lambduh-get-s3-object": "1.1.0",
     "lambduh-put-s3-object": "1.0.0",
     "lambduh-transform-s3-event": "1.0.1",
     "lambduh-validate": "1.1.0",
