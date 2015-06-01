@@ -12,10 +12,10 @@ process.env.PATH = process.env.PATH + ':/tmp/:' + process.env.LAMBDA_TASK_ROOT;
 var pathToBash;
 if (!process.env.NODE_ENV || process.env.NODE_ENV != 'testing') {
   //production
-  pathToBash = '/var/task/gif2mp4';
+  pathToBash = '/var/task/gif2mp4.sh';
 } else {
   //local
-  pathToBash = './bin/gif2mp4';
+  pathToBash = './bin/gif2mp4.sh';
 }
 
 exports.handler = function(event, context) {
